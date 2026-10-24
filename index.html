@@ -236,6 +236,9 @@ const fmtSec=s=>{s=Math.max(0,Math.round(s||0));const h=Math.floor(s/3600),m=Mat
 const fmtDur=ms=>{const m=Math.round(ms/60000);if(m<60)return m+' min';return Math.floor(m/60)+' h '+pad(m%60)};
 const fmtDay=k=>{const d=fromDk(k);return d.getDate()+' '+MC[d.getMonth()]};
 const fmtDayLong=k=>{const d=fromDk(k);return JOURS[d.getDay()]+' '+d.getDate()+' '+MOIS[d.getMonth()]};
+const LB=0.45359237;
+const toU=(kg,u)=>kg==null?null:(u==='lb'?Math.round(kg/LB*10)/10:kg);
+const fromU=(v,u)=>v==null?null:(u==='lb'?v*LB:v);
 const e1rm=(w,r)=>(!w||!r)?0:(r===1?w:w*(1+r/30));
 const weekStart=d=>{d=new Date(d);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d};
 const addDays=(d,n)=>{d=new Date(d);d.setDate(d.getDate()+n);return d};
@@ -284,7 +287,7 @@ const SEED=[
 ['Course à pied','Cardio','Autre','distance'],['Vélo','Cardio','Machine','distance'],['Rameur','Cardio','Machine','distance'],['Marche inclinée','Cardio','Machine','distance'],['Corde à sauter','Cardio','Autre','temps'],['Elliptique','Cardio','Machine','temps'],
 ['Kettlebell swing','Corps entier','Kettlebell','charge'],['Burpees','Corps entier','Poids du corps','reps'],
 ];
-const DEF_SETTINGS={since:null,rest:90,sound:true,haptic:true,wake:true,bar:20,plates:[25,20,15,10,5,2.5,1.25],lastBackup:null};
+const DEF_SETTINGS={since:null,unit:'kg',barLb:45,rest:90,sound:true,haptic:true,wake:true,bar:20,plates:[25,20,15,10,5,2.5,1.25],lastBackup:null};
 
 /* ---------- base de données (IndexedDB) ---------- */
 const DB={
@@ -340,6 +343,7 @@ function setTxt(type,x){
   if(type==='temps')return fmtSec(x.t);
   return `${fmtN(x.d??0)} km · ${fmtN(x.t??0)} min`;
 }
+function setTxtU(type,x,u){if(type==='charge'&&u==='lb'&&x)return `${fmtN(toU(x.w??0,'lb'))}×${x.r??'?'}`;return setTxt(type,x)}
 function sessVolume(s){let v=0;s.items.forEach(i=>{if(exType(i)==='charge')i.sets.forEach(x=>{if(x.done)v+=(x.w||0)*(x.r||0)})});return v}
 function sessSets(s){let n=0;s.items.forEach(i=>i.sets.forEach(x=>{if(x.done)n++}));return n}
 function tplMinutes(t){let s=0;t.items.forEach(i=>{s+=i.sets*(45+(i.ss?0:(i.rest||0)))});return Math.max(5,Math.round(s/60/5)*5)}
@@ -699,37 +703,44 @@ function vSet(){
   const st=S.settings,lb=st.lastBackup,nS=doneSess().length;
   const tog=(k,l,d)=>`<div class="li"><div class="grow"><div>${l}</div>${d?`<div class="small muted">${d}</div>`:''}</div><button class="sw ${st[k]?'on':''}" data-a="tog" data-k="${k}" aria-label="${esc(l)}"></button></div>`;
   let h=`<div class="h2">Sauvegarde</div><div class="card"><div class="small muted" style="margin-bottom:12px">${lb?'Dernière sauvegarde : '+fmtDay(dk(lb))+' ('+Math.floor((Date.now()-lb)/864e5)+' j)':'Aucune sauvegarde pour l’instant.'} Enregistre le .zip dans Fichiers ou iCloud Drive.</div><button class="btn full" data-a="backup">${ic('save','s')}Créer une sauvegarde (.zip)</button><button class="btn full sec" style="margin-top:10px" data-a="restore">Restaurer une sauvegarde</button></div>`;
-  h+=`<div class="h2">Pendant la séance</div><div class="card list"><div class="li"><div class="grow">Repos par défaut<div class="small muted">Pour les nouveaux exercices</div></div><select data-a2="rest" style="width:auto">${RESTS.filter(r=>r).map(r=>`<option value="${r}" ${r==st.rest?'selected':''}>${fmtSec(r)}</option>`).join('')}</select></div>${tog('sound','Son à la fin du repos','Vérifie que le mode silencieux est coupé')}${tog('haptic','Vibration','Sur iPhone avec iOS 18 ou plus récent')}${tog('wake','Écran toujours allumé','Pendant une séance en cours')}</div>`;
+  h+=`<div class="h2">Pendant la séance</div><div class="card list"><div class="li"><div class="grow">Unité de saisie des charges<div class="small muted">Tout est enregistré en kg</div></div><div class="row" style="gap:6px">${['kg','lb'].map(u=>`<button class="chip ${st.unit===u?'on':''}" data-a="unit" data-u="${u}">${u}</button>`).join('')}</div></div><div class="li"><div class="grow">Repos par défaut<div class="small muted">Pour les nouveaux exercices</div></div><select data-a2="rest" style="width:auto">${RESTS.filter(r=>r).map(r=>`<option value="${r}" ${r==st.rest?'selected':''}>${fmtSec(r)}</option>`).join('')}</select></div>${tog('sound','Son à la fin du repos','Vérifie que le mode silencieux est coupé')}${tog('haptic','Vibration','Sur iPhone avec iOS 18 ou plus récent')}${tog('wake','Écran toujours allumé','Pendant une séance en cours')}</div>`;
   h+=`<div class="h2">Calculateur de disques</div><div class="card"><div class="field"><label>Barre par défaut</label><div class="chips">${[20,15,10,7,0].map(b=>`<button class="chip ${st.bar==b?'on':''}" data-a="bar" data-b="${b}">${b?b+' kg':'Sans barre'}</button>`).join('')}</div></div><div class="field"><label>Disques disponibles (par paire)</label><div class="chips" style="flex-wrap:wrap">${[25,20,15,10,5,2.5,2,1.25,1,0.5].map(p=>`<button class="chip ${st.plates.includes(p)?'on':''}" data-a="plate" data-p="${p}">${fmtN(p)}</button>`).join('')}</div></div><button class="btn full sec" data-a="plates">${ic('disc','s')}Ouvrir le calculateur</button></div>`;
   h+=`<div class="h2">Données</div><div class="card"><div class="small muted" style="margin-bottom:12px">${nS} séance${nS>1?'s':''} · ${S.templates.length} séances types · ${S.exercises.filter(e=>e.custom).length} exercices perso.<br>Tout est stocké uniquement sur cet iPhone, dans l’app de l’écran d’accueil. Aucun compte, rien n’est envoyé.</div><button class="btn full danger" data-a="wipe">Tout effacer</button></div>`;
-  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.0</div>`;
+  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.1</div>`;
   return {sub:'Préférences',title:'Réglages',html:h};
 }
-function platesSheet(target){
-  let t=target||60,bar=S.settings.bar;
+function platesSheet(target,unit){
+  let u=unit||S.settings.unit||'kg';
+  let bar=u==='lb'?S.settings.barLb:S.settings.bar,t=target||(u==='lb'?135:60);
   const body=openSheet('');
-  const COL={25:'#e5484d',20:'#3e7bfa',15:'#f5c518',10:'#30a46c',5:'#f1f1f1',2.5:'#7c7c8a',2:'#3e7bfa',1.25:'#c0c0cc',1:'#30a46c',0.5:'#f1f1f1'};
-  const HT={25:120,20:112,15:100,10:88,5:68,2.5:54,2:50,1.25:44,1:40,0.5:34};
+  const KG={col:{25:'#e5484d',20:'#3e7bfa',15:'#f5c518',10:'#30a46c',5:'#f1f1f1',2.5:'#7c7c8a',2:'#3e7bfa',1.25:'#c0c0cc',1:'#30a46c',0.5:'#f1f1f1'},ht:{25:120,20:112,15:100,10:88,5:68,2.5:54,2:50,1.25:44,1:40,0.5:34},bars:[20,15,10,7,0]};
+  const LBS={col:{45:'#3e7bfa',35:'#f5c518',25:'#30a46c',10:'#f1f1f1',5:'#7c7c8a',2.5:'#c0c0cc'},ht:{45:120,35:108,25:96,10:76,5:60,2.5:48},bars:[45,35,15,0],plates:[45,35,25,10,5,2.5]};
+  const light=c=>c==='#f1f1f1'||c==='#c0c0cc'||c==='#f5c518';
   const draw=()=>{
+    const M=u==='lb'?LBS:KG,avail=u==='lb'?LBS.plates:S.settings.plates;
     let side=(t-bar)/2;const res=[];
-    if(side>=0)for(const p of [...S.settings.plates].sort((a,b)=>b-a)){while(side>=p-1e-9){res.push(p);side=Math.round((side-p)*1000)/1000}}
+    if(side>=0)for(const p of [...avail].sort((a,b)=>b-a)){while(side>=p-1e-9){res.push(p);side=Math.round((side-p)*1000)/1000}}
     const ok=t>=bar;
-    const pl=res.slice().reverse().map(p=>`<div class="pl" style="height:${HT[p]}px;background:${COL[p]}"><span style="color:${p===5||p===0.5||p===1.25?'#222':'#fff'}">${fmtN(p)}</span></div>`).join('');
-    const pr=res.map(p=>`<div class="pl" style="height:${HT[p]}px;background:${COL[p]}"><span style="color:${p===5||p===0.5||p===1.25?'#222':'#fff'}">${fmtN(p)}</span></div>`).join('');
+    const one=p=>`<div class="pl" style="height:${M.ht[p]||50}px;background:${M.col[p]||'#7c7c8a'}"><span style="color:${light(M.col[p])?'#222':'#fff'}">${fmtN(p)}</span></div>`;
+    const conv=u==='lb'?`= ${fmtN(Math.round(t*LB*10)/10)} kg`:`= ${fmtN(Math.round(t/LB*10)/10)} lb`;
     body.innerHTML=`<h3>Calculateur de disques</h3>
+    <div class="seg" style="margin-top:0">${['kg','lb'].map(x=>`<button data-x="u" data-u="${x}" class="${u===x?'on':''}">${x==='kg'?'Kilos (kg)':'Livres (lb)'}</button>`).join('')}</div>
     <div class="row" style="gap:8px"><button class="ibtn" data-x="m" style="width:46px;height:46px">${ic('minus')}</button><input id="pt" inputmode="decimal" value="${fmtN(t)}" style="text-align:center;font-size:24px;font-weight:700;height:46px"><button class="ibtn" data-x="p" style="width:46px;height:46px">${ic('plus')}</button></div>
-    <div class="chips" style="margin-top:10px">${[20,15,10,7,0].map(b=>`<button class="chip ${bar==b?'on':''}" data-x="b" data-b="${b}">${b?'Barre '+b+' kg':'Sans barre'}</button>`).join('')}</div>
-    ${ok?`<div class="plates">${pl}<div class="bar" style="width:${bar?60:20}px"></div>${pr}</div>
-    <div style="text-align:center;font-size:17px"><b>${res.length?'Par côté : '+res.map(fmtN).join(' + '):'Barre seule'}</b></div>
-    ${side>0.001?`<div class="small" style="text-align:center;color:var(--gold);margin-top:6px">Impossible à faire exactement : il manque ${fmtN(side*2)} kg au total</div>`:''}`:`<div class="empty">La charge est inférieure au poids de la barre.</div>`}
-    <div class="tiny dim" style="text-align:center;margin-top:12px">Disques disponibles modifiables dans Réglages.</div>`;
+    <div class="small muted num" style="text-align:center;margin-top:6px">${conv}</div>
+    <div class="chips" style="margin-top:10px">${M.bars.map(b=>`<button class="chip ${bar==b?'on':''}" data-x="b" data-b="${b}">${b?'Barre '+b+' '+u:'Sans barre'}</button>`).join('')}</div>
+    ${ok?`<div class="plates">${res.slice().reverse().map(one).join('')}<div class="bar" style="width:${bar?60:20}px"></div>${res.map(one).join('')}</div>
+    <div style="text-align:center;font-size:17px"><b>${res.length?'Par côté : '+res.map(fmtN).join(' + ')+' '+u:'Barre seule'}</b></div>
+    ${side>0.001?`<div class="small" style="text-align:center;color:var(--gold);margin-top:6px">Impossible à faire exactement : il manque ${fmtN(side*2)} ${u} au total</div>`:''}`:`<div class="empty">La charge est inférieure au poids de la barre.</div>`}
+    <div class="tiny dim" style="text-align:center;margin-top:12px">${u==='lb'?'Disques en livres : 45, 35, 25, 10, 5 et 2,5 lb.':'Disques disponibles modifiables dans Réglages.'}</div>`;
   };
   draw();
+  const step=()=>u==='lb'?5:2.5;
   body.addEventListener('change',e=>{if(e.target.id==='pt'){t=num(e.target.value)||0;draw()}});
   body.addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(!x)return;
-    if(x.dataset.x==='m'){t=Math.max(0,(num($('#pt',body).value)||t)-2.5);draw()}
-    if(x.dataset.x==='p'){t=(num($('#pt',body).value)||t)+2.5;draw()}
+    if(x.dataset.x==='m'){t=Math.max(0,(num($('#pt',body).value)??t)-step());draw()}
+    if(x.dataset.x==='p'){t=(num($('#pt',body).value)??t)+step();draw()}
     if(x.dataset.x==='b'){bar=+x.dataset.b;draw()}
+    if(x.dataset.x==='u'&&x.dataset.u!==u){u=x.dataset.u;t=u==='lb'?Math.round(t/LB/5)*5:Math.round(t*LB/2.5)*2.5;bar=u==='lb'?S.settings.barLb:S.settings.bar;draw()}
   });
 }
 
@@ -739,7 +750,7 @@ function makeItem(exId,t,tplId,before,excl){
   const e=exById(exId)||{},type=e.type||'charge',pv=lastPerf(exId,tplId,before,excl);
   const n=Math.max(t.sets||3,pv?pv.sets.length:0),sets=[];
   for(let k=0;k<n;k++){const p=pv?(pv.sets[k]||pv.sets[pv.sets.length-1]):null;sets.push({w:p?p.w:null,r:p?p.r:null,t:p?p.t:null,d:p?p.d:null,done:false,pr:null})}
-  return {exId,exName:e.name,type,muscle:e.muscle,tgt:t.reps||null,rest:t.rest??S.settings.rest,ss:!!t.ss,sets,prev:pv?pv.sets:null,prevDate:pv?pv.date:null};
+  return {exId,exName:e.name,type,muscle:e.muscle,unit:S.settings.unit||'kg',tgt:t.reps||null,rest:t.rest??S.settings.rest,ss:!!t.ss,sets,prev:pv?pv.sets:null,prevDate:pv?pv.date:null};
 }
 function createSession(tplId,dayK){
   const act=activeSess();if(act){toast('Termine d’abord la séance en cours');openLive(act);return}
@@ -761,25 +772,27 @@ let saveT;
 function saveLive(now){clearTimeout(saveT);const s=L;if(!s)return;if(now)return saveSess(s);saveT=setTimeout(()=>saveSess(s),400)}
 function cellPh(it,k,f){
   const p=it.prev&&(it.prev[k]||it.prev[it.prev.length-1]);
-  if(p&&p[f]!=null)return fmtN(p[f]);
+  if(p&&p[f]!=null)return fmtN(f==='w'?toU(p[f],it.unit):p[f]);
   if(f==='r'&&it.tgt)return it.tgt;if(f==='t'&&it.type==='temps'&&it.tgt)return it.tgt;
-  return ({w:'kg',r:'reps',t:it.type==='temps'?'sec':'min',d:'km'})[f];
+  return ({w:it.unit==='lb'?'lb':'kg',r:'reps',t:it.type==='temps'?'sec':'min',d:'km'})[f];
 }
 function renderLive(){
   const s=L,b=$('#live .lv-b'),st=b?b.scrollTop:0;
-  let h=`<div class="lv-h"><button class="ibtn" data-a="liveMin" aria-label="Réduire">${ic('down')}</button><div class="t"><b class="ell">${esc(s.name)}</b><span class="num" id="lvT">${s.done?'Modification · '+fmtDay(s.date):s.past?fmtDayLong(s.date):fmtSec((Date.now()-s.start)/1000)}</span></div><button class="btn sm" data-a="finish">${s.done?'Enregistrer':'Terminer'}</button></div><div class="lv-b">`;
+  let h=`<div class="lv-h"><button class="ibtn" data-a="liveMin" aria-label="Réduire">${ic('down')}</button><div class="t"><b class="ell">${esc(s.name)}</b><span class="num" id="lvT">${s.done?'Modification · '+fmtDay(s.date):s.past?fmtDayLong(s.date):fmtSec((Date.now()-s.start)/1000)}</span></div>${s.items.some(it=>(it.type||exType(it))==='charge')?`<button class="chip ${S.settings.unit==='lb'?'on':''}" data-a="lvUnit" style="height:34px;padding:0 10px">${S.settings.unit==='lb'?'lb':'kg'}</button>`:''}<button class="btn sm" data-a="finish">${s.done?'Enregistrer':'Terminer'}</button></div><div class="lv-b">`;
+  if(s.items.some(it=>it.unit==='lb'&&(it.type||exType(it))==='charge'))h+=`<div class="banner" style="padding:10px 12px"><div class="grow small">Saisie en <b>livres (lb)</b>, enregistrée automatiquement en kg. Touche « lb » en haut pour revenir en kg.</div></div>`;
   if(!s.items.length)h+=`<div class="empty"><b>Séance vide</b>Ajoute des exercices pour commencer.</div>`;
   s.items.forEach((it,i)=>{
     const ty=it.type||exType(it),F=FIELDS[ty],c=chain(s.items,i),cols=`26px minmax(0,1fr) ${F.map(()=>'64px').join(' ')} 40px`;
     const doneN=it.sets.filter(x=>x.done).length;
     h+=`<div class="ex ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${c.on?`<span class="badge" style="margin-right:6px">Superset</span>`:''}${doneN}/${it.sets.length} séries</div></div>
     ${ty==='charge'?`<button class="ibtn" data-a="lvPlates" data-i="${i}" aria-label="Disques">${ic('disc','s')}</button>`:''}<button class="ibtn" data-a="lvHist" data-i="${i}" aria-label="Historique">${ic('hist','s')}</button><button class="ibtn" data-a="lvRm" data-i="${i}" aria-label="Retirer">${ic('x','s')}</button></div>`;
-    if(it.prev)h+=`<div class="prevl">Pré-rempli avec ta séance du ${fmtDay(it.prevDate)} : ${it.prev.map(p=>setTxt(ty,p)).join(', ')}</div>`;
+    if(it.prev)h+=`<div class="prevl">Pré-rempli avec ta séance du ${fmtDay(it.prevDate)} : ${it.prev.map(p=>setTxtU(ty,p,it.unit)).join(', ')}${ty==='charge'?' ('+(it.unit==='lb'?'lb':'kg')+')':''}</div>`;
     else h+=`<div class="prevl">Première fois${it.tgt&&ty!=='distance'?' · objectif '+(ty==='temps'?fmtSec(it.tgt):it.tgt+' reps'):''}</div>`;
-    h+=`<div class="sets"><div class="sr hd" style="grid-template-columns:${cols}"><span>#</span><span>Préc.</span>${F.map(f=>`<span style="text-align:center">${f[1]}</span>`).join('')}<span></span></div>`;
+    const lbm=ty==='charge'&&it.unit==='lb';
+    h+=`<div class="sets"><div class="sr hd" style="grid-template-columns:${cols}"><span>#</span><span>${lbm?'= kg':'Préc.'}</span>${F.map(f=>f[0]==='w'?`<button data-a="lvItemUnit" data-i="${i}" style="text-align:center;font-size:11px;color:var(--ac);text-transform:uppercase;letter-spacing:.5px">${lbm?'lb':'kg'} ⇄</button>`:`<span style="text-align:center">${f[1]}</span>`).join('')}<span></span></div>`;
     it.sets.forEach((x,k)=>{
       const p=it.prev&&it.prev[k];
-      h+=`<div class="sr ${x.done?'done':''}" style="grid-template-columns:${cols}"><span class="k ${x.pr?'pr':''}">${x.pr?ic('trophy','s').replace('class="i s"','class="i" style="width:15px;height:15px"'):k+1}</span><span class="pv">${p?setTxt(ty,p):'·'}</span>${F.map(f=>`<input class="cell" inputmode="${f[2]}" data-i="${i}" data-k="${k}" data-f="${f[0]}" value="${x[f[0]]!=null?fmtN(x[f[0]]):''}" placeholder="${cellPh(it,k,f[0])}">`).join('')}<button class="ck" data-a="chk" data-i="${i}" data-k="${k}" aria-label="Valider la série">${ic('check')}</button></div>`;
+      h+=`<div class="sr ${x.done?'done':''}" style="grid-template-columns:${cols}"><span class="k ${x.pr?'pr':''}">${x.pr?ic('trophy','s').replace('class="i s"','class="i" style="width:15px;height:15px"'):k+1}</span><span class="pv" id="kv${i}_${k}">${lbm?(x.w!=null?'= '+fmtN(Math.round(x.w*10)/10):'·'):(p?setTxt(ty,p):'·')}</span>${F.map(f=>`<input class="cell" inputmode="${f[2]}" data-i="${i}" data-k="${k}" data-f="${f[0]}" value="${x[f[0]]!=null?fmtN(f[0]==='w'?toU(x[f[0]],it.unit):x[f[0]]):''}" placeholder="${cellPh(it,k,f[0])}">`).join('')}<button class="ck" data-a="chk" data-i="${i}" data-k="${k}" aria-label="Valider la série">${ic('check')}</button></div>`;
       if(x.pr)h+=`<div class="tiny" style="color:var(--gold);margin:-2px 0 2px 36px">${esc(x.pr)}</div>`;
     });
     h+=`</div><div class="ex-f"><button class="chip" data-a="lvAdd" data-i="${i}">${ic('plus','s')}Série</button>${it.sets.length>1?`<button class="chip" data-a="lvDel" data-i="${i}">${ic('minus','s')}Série</button>`:''}<span class="grow"></span>${!s.past?`<span class="tiny dim">${ic('timer','s').replace('class="i s"','class="i" style="width:14px;height:14px;vertical-align:-2px"')}</span><select data-a2="lvRest" data-i="${i}">${RESTS.map(r=>`<option value="${r}" ${r==it.rest?'selected':''}>${r?fmtSec(r):'Aucun'}</option>`).join('')}</select>`:''}</div>`;
@@ -1002,8 +1015,11 @@ const A={
   lvDel:el=>{const it=L.items[+el.dataset.i];if(it.sets.length>1){it.sets.pop();saveLive(true);renderLive()}},
   lvRm:el=>{const i=+el.dataset.i;if(!confirm(`Retirer « ${exName(L.items[i])} » de cette séance ?`))return;if(i>0&&!L.items[i].ss)L.items[i-1].ss=false;L.items.splice(i,1);saveLive(true);renderLive()},
   lvAddEx:()=>addToLive(),
+  lvUnit:()=>{const u=S.settings.unit==='lb'?'kg':'lb';S.settings.unit=u;save('settings');L.items.forEach(it=>{if((it.type||exType(it))==='charge')it.unit=u});saveLive(true);renderLive();toast(u==='lb'?'Saisie en livres, enregistrée en kg':'Saisie en kg')},
+  lvItemUnit:el=>{const it=L.items[+el.dataset.i];it.unit=it.unit==='lb'?'kg':'lb';saveLive(true);renderLive()},
+  unit:el=>{S.settings.unit=el.dataset.u;save('settings');render()},
   lvHist:el=>exSheet(L.items[+el.dataset.i].exId),
-  lvPlates:el=>{const it=L.items[+el.dataset.i];const x=it.sets.find(y=>!y.done)||it.sets[0];const p=it.prev&&it.prev[0];platesSheet(x.w??(p&&p.w)??60)},
+  lvPlates:el=>{const it=L.items[+el.dataset.i];const x=it.sets.find(y=>!y.done)||it.sets[0];const p=it.prev&&it.prev[0];const kg=x.w??(p&&p.w)??null;platesSheet(kg==null?null:toU(kg,it.unit),it.unit)},
   rAdj:el=>{if(!R)return;R.end+=(+el.dataset.n)*1000;R.total=Math.max(R.total,R.end-Date.now());tickRest()},
   rSkip:()=>stopRest(),
 };
@@ -1011,7 +1027,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='exq'){exSearch=t.value;$('#exlist').innerHTML=exListHtml();return}
-  if(t.classList.contains('cell')&&L){const it=L.items[+t.dataset.i],x=it.sets[+t.dataset.k];x[t.dataset.f]=num(t.value);saveLive()}
+  if(t.classList.contains('cell')&&L){const it=L.items[+t.dataset.i],x=it.sets[+t.dataset.k],f=t.dataset.f;x[f]=f==='w'?fromU(num(t.value),it.unit):num(t.value);if(f==='w'&&it.unit==='lb'){const kv=$('#kv'+t.dataset.i+'_'+t.dataset.k);if(kv)kv.textContent=x.w!=null?'= '+fmtN(Math.round(x.w*10)/10):'·'}saveLive()}
 });
 document.addEventListener('change',e=>{
   const t=e.target;
