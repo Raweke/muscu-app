@@ -168,6 +168,9 @@ svg.i.s{width:18px;height:18px}
 .ck{width:40px;height:40px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;color:var(--tx3)}
 .ck svg{stroke-width:2.6}
 .sr.done .ck{background:var(--ac);color:#140d24}
+.ex-h .ibtn{width:34px;height:34px}
+.ex.skp{opacity:.75}
+.ex.skp .n{text-decoration:line-through;color:var(--tx3)}
 .ex-f{display:flex;align-items:center;gap:8px;margin-top:8px}
 .ex-f select{width:auto;height:34px;padding:0 28px 0 10px;font-size:13px;border-radius:17px;background-color:var(--s2)}
 
@@ -261,6 +264,7 @@ disc:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/>',
 search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
 hist:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
 save:'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+skip:'<path d="M5 5l10 7-10 7z"/><path d="M19 5v14"/>',
 };
 const ic=(n,c='')=>`<svg class="i ${c}" viewBox="0 0 24 24">${ICONS[n]||''}</svg>`;
 
@@ -335,6 +339,13 @@ function lastPerf(exId,tplId,before,excl){
   if(!s)return null;
   const sets=[];s.items.filter(i=>i.exId===exId).forEach(i=>i.sets.filter(x=>x.done).forEach(x=>sets.push({w:x.w,r:x.r,t:x.t,d:x.d})));
   return {sets,date:s.date};
+}
+function lastStatus(exId,tplId,before,excl){
+  const list=S.sessions.filter(s=>s.done&&s.id!==excl&&s.start<before).sort((a,b)=>b.start-a.start);
+  const has=s=>s.items.some(i=>i.exId===exId&&(i.skipped||i.sets.some(x=>x.done)));
+  const s=(tplId&&list.find(s=>s.templateId===tplId&&has(s)))||list.find(has);
+  if(!s)return null;const it=s.items.find(i=>i.exId===exId&&(i.skipped||i.sets.some(x=>x.done)));
+  return it&&it.skipped&&!s.items.some(i=>i.exId===exId&&i.sets.some(x=>x.done))?s.date:null;
 }
 function setTxt(type,x){
   if(!x)return '';
@@ -706,7 +717,7 @@ function vSet(){
   h+=`<div class="h2">Pendant la séance</div><div class="card list"><div class="li"><div class="grow">Unité de saisie des charges<div class="small muted">Tout est enregistré en kg</div></div><div class="row" style="gap:6px">${['kg','lb'].map(u=>`<button class="chip ${st.unit===u?'on':''}" data-a="unit" data-u="${u}">${u}</button>`).join('')}</div></div><div class="li"><div class="grow">Repos par défaut<div class="small muted">Pour les nouveaux exercices</div></div><select data-a2="rest" style="width:auto">${RESTS.filter(r=>r).map(r=>`<option value="${r}" ${r==st.rest?'selected':''}>${fmtSec(r)}</option>`).join('')}</select></div>${tog('sound','Son à la fin du repos','Vérifie que le mode silencieux est coupé')}${tog('haptic','Vibration','Sur iPhone avec iOS 18 ou plus récent')}${tog('wake','Écran toujours allumé','Pendant une séance en cours')}</div>`;
   h+=`<div class="h2">Calculateur de disques</div><div class="card"><div class="field"><label>Barre par défaut</label><div class="chips">${[20,15,10,7,0].map(b=>`<button class="chip ${st.bar==b?'on':''}" data-a="bar" data-b="${b}">${b?b+' kg':'Sans barre'}</button>`).join('')}</div></div><div class="field"><label>Disques disponibles (par paire)</label><div class="chips" style="flex-wrap:wrap">${[25,20,15,10,5,2.5,2,1.25,1,0.5].map(p=>`<button class="chip ${st.plates.includes(p)?'on':''}" data-a="plate" data-p="${p}">${fmtN(p)}</button>`).join('')}</div></div><button class="btn full sec" data-a="plates">${ic('disc','s')}Ouvrir le calculateur</button></div>`;
   h+=`<div class="h2">Données</div><div class="card"><div class="small muted" style="margin-bottom:12px">${nS} séance${nS>1?'s':''} · ${S.templates.length} séances types · ${S.exercises.filter(e=>e.custom).length} exercices perso.<br>Tout est stocké uniquement sur cet iPhone, dans l’app de l’écran d’accueil. Aucun compte, rien n’est envoyé.</div><button class="btn full danger" data-a="wipe">Tout effacer</button></div>`;
-  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.1</div>`;
+  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.2</div>`;
   return {sub:'Préférences',title:'Réglages',html:h};
 }
 function platesSheet(target,unit){
@@ -750,7 +761,7 @@ function makeItem(exId,t,tplId,before,excl){
   const e=exById(exId)||{},type=e.type||'charge',pv=lastPerf(exId,tplId,before,excl);
   const n=Math.max(t.sets||3,pv?pv.sets.length:0),sets=[];
   for(let k=0;k<n;k++){const p=pv?(pv.sets[k]||pv.sets[pv.sets.length-1]):null;sets.push({w:p?p.w:null,r:p?p.r:null,t:p?p.t:null,d:p?p.d:null,done:false,pr:null})}
-  return {exId,exName:e.name,type,muscle:e.muscle,unit:S.settings.unit||'kg',tgt:t.reps||null,rest:t.rest??S.settings.rest,ss:!!t.ss,sets,prev:pv?pv.sets:null,prevDate:pv?pv.date:null};
+  return {exId,exName:e.name,type,muscle:e.muscle,unit:S.settings.unit||'kg',skipped:false,skipLast:lastStatus(exId,tplId,before,excl),tgt:t.reps||null,rest:t.rest??S.settings.rest,ss:!!t.ss,sets,prev:pv?pv.sets:null,prevDate:pv?pv.date:null};
 }
 function createSession(tplId,dayK){
   const act=activeSess();if(act){toast('Termine d’abord la séance en cours');openLive(act);return}
@@ -784,9 +795,11 @@ function renderLive(){
   s.items.forEach((it,i)=>{
     const ty=it.type||exType(it),F=FIELDS[ty],c=chain(s.items,i),cols=`26px minmax(0,1fr) ${F.map(()=>'64px').join(' ')} 40px`;
     const doneN=it.sets.filter(x=>x.done).length;
+    if(it.skipped){h+=`<div class="ex skp ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h" style="margin:0"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${ic('skip','s').replace('class="i s"','class="i" style="width:12px;height:12px;vertical-align:-1px"')} Exercice passé</div></div><button class="chip on" data-a="lvSkip" data-i="${i}">Reprendre</button></div></div>`;return}
     h+=`<div class="ex ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${c.on?`<span class="badge" style="margin-right:6px">Superset</span>`:''}${doneN}/${it.sets.length} séries</div></div>
-    ${ty==='charge'?`<button class="ibtn" data-a="lvPlates" data-i="${i}" aria-label="Disques">${ic('disc','s')}</button>`:''}<button class="ibtn" data-a="lvHist" data-i="${i}" aria-label="Historique">${ic('hist','s')}</button><button class="ibtn" data-a="lvRm" data-i="${i}" aria-label="Retirer">${ic('x','s')}</button></div>`;
-    if(it.prev)h+=`<div class="prevl">Pré-rempli avec ta séance du ${fmtDay(it.prevDate)} : ${it.prev.map(p=>setTxtU(ty,p,it.unit)).join(', ')}${ty==='charge'?' ('+(it.unit==='lb'?'lb':'kg')+')':''}</div>`;
+    ${ty==='charge'?`<button class="ibtn" data-a="lvPlates" data-i="${i}" aria-label="Disques">${ic('disc','s')}</button>`:''}<button class="ibtn" data-a="lvHist" data-i="${i}" aria-label="Historique">${ic('hist','s')}</button><button class="ibtn" data-a="lvSkip" data-i="${i}" aria-label="Passer l’exercice">${ic('skip','s')}</button><button class="ibtn" data-a="lvRm" data-i="${i}" aria-label="Retirer">${ic('x','s')}</button></div>`;
+    if(it.skipLast)h+=`<div style="margin:0 0 6px"><span class="badge red">${ic('skip','s').replace('class="i s"','class="i" style="width:12px;height:12px"')}Passé la dernière fois (${fmtDay(it.skipLast)})</span></div>`;
+    if(it.prev)h+=`<div class="prevl">${it.skipLast?'Perfs de la séance d’avant':'Pré-rempli avec ta séance'} du ${fmtDay(it.prevDate)} : ${it.prev.map(p=>setTxtU(ty,p,it.unit)).join(', ')}${ty==='charge'?' ('+(it.unit==='lb'?'lb':'kg')+')':''}</div>`;
     else h+=`<div class="prevl">Première fois${it.tgt&&ty!=='distance'?' · objectif '+(ty==='temps'?fmtSec(it.tgt):it.tgt+' reps'):''}</div>`;
     const lbm=ty==='charge'&&it.unit==='lb';
     h+=`<div class="sets"><div class="sr hd" style="grid-template-columns:${cols}"><span>#</span><span>${lbm?'= kg':'Préc.'}</span>${F.map(f=>f[0]==='w'?`<button data-a="lvItemUnit" data-i="${i}" style="text-align:center;font-size:11px;color:var(--ac);text-transform:uppercase;letter-spacing:.5px">${lbm?'lb':'kg'} ⇄</button>`:`<span style="text-align:center">${f[1]}</span>`).join('')}<span></span></div>`;
@@ -843,7 +856,7 @@ function finishSheet(){
     const note=$('#fnote',body)?$('#fnote',body).value:s.note||'',dur=$('#fdur',body)?$('#fdur',body).value:elapsed;
     body.innerHTML=`<h3>${s.done?'Enregistrer les modifications':'Terminer la séance'}</h3>
     <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries validées</div><div class="v num">${doneN}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>
-    ${s.items.some(it=>it.sets.some(x=>!x.done))?`<div class="small" style="color:var(--gold);margin:-2px 0 12px">Les séries non validées ne seront pas enregistrées.</div>`:''}
+    ${s.items.filter(it=>it.skipped).length?`<div class="small muted" style="margin:-2px 0 8px">${s.items.filter(it=>it.skipped).length} exercice(s) passé(s), signalé(s) à la prochaine séance.</div>`:''}${s.items.some(it=>!it.skipped&&it.sets.some(x=>!x.done))?`<div class="small" style="color:var(--gold);margin:-2px 0 12px">Les séries non validées ne seront pas enregistrées.</div>`:''}
     <div class="field"><label>Durée (minutes)</label><input id="fdur" inputmode="numeric" value="${esc(dur)}"></div>
     <div class="field"><label>Effort ressenti (RPE)${rpe?' : '+rpe+'/10':''}</label><div class="rpe">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-x="rpe" data-n="${n}" class="${rpe===n?'on':''}">${n}</button>`).join('')}</div></div>
     <div class="field"><label>Comment tu te sens ?</label><div class="mood">${MOODS.map((m,i)=>`<button data-x="mood" data-n="${i}" class="${mood===i?'on':''}"><span class="dot" style="background:${m[1]};width:12px;height:12px"></span>${m[0]}</button>`).join('')}</div></div>
@@ -858,7 +871,7 @@ function finishSheet(){
     if(a==='ok'){
       if(!doneN){if(confirm('Aucune série validée. Supprimer cette séance ?')){await removeSession(s.id);closeSheet();stopRest();closeLive();toast('Séance supprimée')}return}
       const min=Math.max(1,parseInt($('#fdur',body).value)||elapsed);
-      s.items.forEach(it=>it.sets=it.sets.filter(y=>y.done));s.items=s.items.filter(it=>it.sets.length);
+      s.items.forEach(it=>{it.sets=it.skipped?[]:it.sets.filter(y=>y.done)});s.items=s.items.filter(it=>it.skipped||it.sets.length);s.items.forEach(it=>{delete it.skipLast});
       s.items.forEach(it=>{delete it.prev;delete it.prevDate});
       s.rpe=rpe;s.mood=mood;s.note=$('#fnote',body).value.trim();s.end=s.start+min*60000;
       const was=s.done;s.done=true;
@@ -883,7 +896,7 @@ function sessDetail(id){
   let h=`<div class="row" style="gap:8px;margin-top:4px"><span class="dot" style="background:${s.color||'var(--ac)'};width:12px;height:12px"></span><h3 style="margin:0">${esc(s.name)}</h3></div><div class="small muted" style="margin:4px 0 14px;text-transform:capitalize">${fmtDayLong(s.date)} · ${fmtDur(s.end-s.start)}</div>
   <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries</div><div class="v num">${sessSets(s)}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>`;
   if(s.rpe!=null||s.mood!=null||s.note)h+=`<div class="card" style="background:var(--s2)"><div class="row" style="gap:8px;flex-wrap:wrap">${s.rpe!=null?`<span class="badge">RPE ${s.rpe}/10</span>`:''}${s.mood!=null?`<span class="badge" style="background:transparent;border:1px solid ${MOODS[s.mood][1]};color:${MOODS[s.mood][1]}">${MOODS[s.mood][0]}</span>`:''}</div>${s.note?`<div style="margin-top:8px">${esc(s.note)}</div>`:''}</div>`;
-  s.items.forEach((it,i)=>{const ty=it.type||exType(it),c=chain(s.items,i);h+=`<div class="it ${c.on?'ssl':''}"><div style="font-weight:600">${esc(exName(it))}</div><div class="small muted" style="margin-top:4px;line-height:1.6">${it.sets.map(x=>`${x.pr?'<span style="color:var(--gold)">':''}${setTxt(ty,x)}${x.pr?' ★</span>':''}`).join('  ·  ')}</div></div>`});
+  s.items.forEach((it,i)=>{const ty=it.type||exType(it),c=chain(s.items,i);if(it.skipped){h+=`<div class="it ${c.on?'ssl':''}" style="opacity:.7"><div style="font-weight:600;text-decoration:line-through;color:var(--tx3)">${esc(exName(it))}</div><div class="small" style="color:var(--red);margin-top:2px">Passé</div></div>`;return}h+=`<div class="it ${c.on?'ssl':''}"><div style="font-weight:600">${esc(exName(it))}</div><div class="small muted" style="margin-top:4px;line-height:1.6">${it.sets.map(x=>`${x.pr?'<span style="color:var(--gold)">':''}${setTxt(ty,x)}${x.pr?' ★</span>':''}`).join('  ·  ')}</div></div>`});
   h+=`<div class="stick"><button class="btn danger" data-x="del">${ic('trash','s')}</button><button class="btn sec" data-x="edit">${ic('edit','s')}Modifier</button><button class="btn grow" data-x="share">${ic('share','s')}Partager</button></div>`;
   const body=openSheet(h);
   body.addEventListener('click',async e=>{const x=e.target.closest('[data-x]');if(!x)return;const a=x.dataset.x;
@@ -925,13 +938,13 @@ async function shareImage(s){
   const st=[['Durée',fmtDur(s.end-s.start)],['Séries',String(sessSets(s))],['Volume',fmtK(sessVolume(s))+' kg']];
   st.forEach((v,i)=>{const x=80+i*313;rr(x,340,293,150,28);g.fillStyle='#221c3d';g.fill();g.fillStyle='#a796ff';g.font=`500 28px ${F}`;g.fillText(v[0],x+28,392);g.fillStyle='#ece8ff';g.font=`700 46px ${F}`;g.fillText(v[1],x+28,458)});
   let y=570;const recs=new Set((s.records||[]).map(r=>r.ex));
-  const items=s.items.slice(0,9);
+  const done=s.items.filter(it=>it.sets.length),items=done.slice(0,9);
   items.forEach(it=>{const ty=it.type||exType(it);let best=it.sets[0];it.sets.forEach(x=>{if(ty==='charge'?e1rm(x.w,x.r)>e1rm(best.w,best.r):(x[keyField(ty)]||0)>(best[keyField(ty)]||0))best=x});
     const nm=exName(it);g.fillStyle=recs.has(nm)?'#ffcf5c':'#ece8ff';g.font=`600 38px ${F}`;let n=nm;while(g.measureText(n).width>600&&n.length>4)n=n.slice(0,-2);if(n!==nm)n+='…';g.fillText(n,80,y);
     g.fillStyle='#726a99';g.font=`400 28px ${F}`;g.fillText(it.sets.length+' séries',80,y+40);
     g.fillStyle=recs.has(nm)?'#ffcf5c':'#b56bff';g.font=`700 40px ${F}`;g.textAlign='right';g.fillText((recs.has(nm)?'★ ':'')+setTxt(ty,best),W-80,y+8);g.textAlign='left';
     g.strokeStyle='#2f2852';g.lineWidth=2;g.beginPath();g.moveTo(80,y+66);g.lineTo(W-80,y+66);g.stroke();y+=100});
-  if(s.items.length>9){g.fillStyle='#a49cc8';g.font=`400 30px ${F}`;g.fillText('+ '+(s.items.length-9)+' autres exercices',80,y+10)}
+  if(done.length>9){g.fillStyle='#a49cc8';g.font=`400 30px ${F}`;g.fillText('+ '+(done.length-9)+' autres exercices',80,y+10)}
   const foot=[];if((s.records||[]).length)foot.push(s.records.length+' record'+(s.records.length>1?'s':''));if(s.rpe)foot.push('RPE '+s.rpe+'/10');if(s.mood!=null)foot.push(MOODS[s.mood][0]);
   if(foot.length){g.fillStyle='#ffcf5c';g.font=`600 32px ${F}`;g.fillText(foot.join('  ·  '),80,H-80)}
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`seance-${s.date}.png`;
@@ -1015,6 +1028,10 @@ const A={
   lvDel:el=>{const it=L.items[+el.dataset.i];if(it.sets.length>1){it.sets.pop();saveLive(true);renderLive()}},
   lvRm:el=>{const i=+el.dataset.i;if(!confirm(`Retirer « ${exName(L.items[i])} » de cette séance ?`))return;if(i>0&&!L.items[i].ss)L.items[i-1].ss=false;L.items.splice(i,1);saveLive(true);renderLive()},
   lvAddEx:()=>addToLive(),
+  lvSkip:el=>{const i=+el.dataset.i,it=L.items[i];
+    if(!it.skipped){if(it.sets.some(x=>x.done)&&!confirm('Des séries sont déjà validées pour cet exercice. Les ignorer et passer l’exercice ?'))return;it.sets.forEach(x=>{x.done=false;x.pr=null});it.skipped=true;toast('Exercice passé, il sera signalé la prochaine fois')}
+    else{it.skipped=false;if(!it.sets.length)it.sets.push({w:null,r:null,t:null,d:null,done:false,pr:null})}
+    saveLive(true);renderLive()},
   lvUnit:()=>{const u=S.settings.unit==='lb'?'kg':'lb';S.settings.unit=u;save('settings');L.items.forEach(it=>{if((it.type||exType(it))==='charge')it.unit=u});saveLive(true);renderLive();toast(u==='lb'?'Saisie en livres, enregistrée en kg':'Saisie en kg')},
   lvItemUnit:el=>{const it=L.items[+el.dataset.i];it.unit=it.unit==='lb'?'kg':'lb';saveLive(true);renderLive()},
   unit:el=>{S.settings.unit=el.dataset.u;save('settings');render()},
