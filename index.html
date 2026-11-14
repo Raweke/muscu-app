@@ -16,7 +16,7 @@
 :root{
   --bg:#120f1f;--s1:#1a1630;--s2:#221c3d;--s3:#2c2550;--line:#2f2852;
   --tx:#ece8ff;--tx2:#a49cc8;--tx3:#726a99;
-  --ac:#b56bff;--ac2:#a796ff;--acbg:rgba(181,107,255,.15);--acline:rgba(181,107,255,.45);
+  --ac:#b56bff;--ac2:#a796ff;--acbg:rgba(181,107,255,.15);--acline:rgba(181,107,255,.45);--ink:#140d24;--bgt:rgba(18,15,31,.94);--bgs:rgba(18,15,31,.55);
   --gold:#ffcf5c;--goldbg:rgba(255,207,92,.14);--red:#ff6b81;--redbg:rgba(255,107,129,.13);--ok:#7ef0c3;
   --sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);
   --r:16px;
@@ -40,11 +40,11 @@ svg.i.s{width:18px;height:18px}
 .grow{flex:1;min-width:0}
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-#top{position:sticky;top:0;z-index:20;padding:calc(var(--sat) + 14px) 18px 10px;background:rgba(18,15,31,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#top{position:sticky;top:0;z-index:20;padding:calc(var(--sat) + 14px) 18px 10px;background:var(--bgt);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 #top h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.5px}
 #top .sub{color:var(--ac2);font-size:13px;margin-bottom:2px;text-transform:capitalize}
 #view{padding:6px 16px calc(96px + var(--sab))}
-#tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;padding:8px 6px calc(8px + var(--sab));background:rgba(18,15,31,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;padding:8px 6px calc(8px + var(--sab));background:var(--bgt);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 #tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tx3);font-size:11px;padding:4px 0}
 #tabs button.on{color:var(--ac)}
 
@@ -52,7 +52,7 @@ svg.i.s{width:18px;height:18px}
 .card.tight{padding:10px 12px}
 .h2{font-size:13px;color:var(--ac2);text-transform:uppercase;letter-spacing:.8px;margin:20px 4px 8px;font-weight:600}
 .h2:first-child{margin-top:8px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 18px;border-radius:23px;background:var(--ac);color:#140d24;font-weight:600;font-size:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 18px;border-radius:23px;background:var(--ac);color:var(--ink);font-weight:600;font-size:16px}
 .btn.full{width:100%}
 .btn.sec{background:var(--s2);color:var(--tx);border:1px solid var(--line)}
 .btn.ghost{background:transparent;color:var(--ac2);border:1px solid var(--acline)}
@@ -138,7 +138,13 @@ svg.i.s{width:18px;height:18px}
 .sw.on::after{transform:translateX(20px)}
 .colors{display:flex;gap:10px}
 .colors button{width:34px;height:34px;border-radius:50%;border:3px solid transparent}
-.colors button.on{border-color:#fff}
+.colors button.on{border-color:var(--tx)}
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th{border-radius:14px;padding:10px 8px 9px;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.th.on{border-color:var(--ac);color:var(--tx)}
+.th .sq{width:100%;height:40px;border-radius:10px;display:flex;align-items:flex-end;padding:6px;gap:4px;border:1px solid rgba(255,255,255,.08)}
+.th .sq i{height:8px;border-radius:4px;display:block}
+.wd.ov .pl{text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px}
 .it{background:var(--s2);border-radius:14px;padding:10px 12px;margin-bottom:8px;position:relative}
 .it.ssl{border-left:3px solid var(--ac);border-radius:0 14px 14px 0}
 .step{display:flex;align-items:center;background:var(--s3);border-radius:10px;height:34px}
@@ -165,14 +171,14 @@ svg.i.s{width:18px;height:18px}
 .sr.hd{font-size:11px;color:var(--tx3);padding:0 4px;text-transform:uppercase;letter-spacing:.5px}
 .sr.done{background:var(--acbg)}
 .sr .k{width:26px;height:26px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--tx2)}
-.sr.done .k{background:var(--ac);color:#140d24}
+.sr.done .k{background:var(--ac);color:var(--ink)}
 .sr .k.pr{background:var(--gold);color:#2a1f00}
 .sr .pv{font-size:12px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cell{height:40px;text-align:center;padding:0 4px;font-weight:600;font-size:17px;background:var(--s2);border-radius:10px;font-variant-numeric:tabular-nums}
-.sr.done .cell{background:rgba(18,15,31,.55);border-color:transparent}
+.sr.done .cell{background:var(--bgs);border-color:transparent}
 .ck{width:40px;height:40px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;color:var(--tx3)}
 .ck svg{stroke-width:2.6}
-.sr.done .ck{background:var(--ac);color:#140d24}
+.sr.done .ck{background:var(--ac);color:var(--ink)}
 .ex-h .ibtn{width:34px;height:34px}
 .ex.skp{opacity:.75}
 .ex.skp .n{text-decoration:line-through;color:var(--tx3)}
@@ -197,7 +203,7 @@ body.lv #restbar{bottom:calc(12px + var(--sab))}
 .mood button.on{background:var(--acbg);color:var(--tx);outline:1px solid var(--acline)}
 .rpe{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
 .rpe button{height:38px;border-radius:10px;background:var(--s2);font-weight:600;color:var(--tx2)}
-.rpe button.on{background:var(--ac);color:#140d24}
+.rpe button.on{background:var(--ac);color:var(--ink)}
 .chart{width:100%;display:block}
 /* aide : ?, appui long, guide */
 .qm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--tx3);color:var(--tx2);font-size:12px;font-weight:700;line-height:1;vertical-align:middle;margin-left:4px;flex:none;position:relative}
@@ -332,7 +338,7 @@ const DB={
   del(id){return this.q(this.st('sessions','readwrite').delete(id))},
   clear(){return Promise.all([this.q(this.st('sessions','readwrite').clear()),this.q(this.st('kv','readwrite').clear())])}
 };
-const S={exercises:[],templates:[],plan:{},sessions:[],settings:{...DEF_SETTINGS}};
+const S={exercises:[],templates:[],plan:{},planDates:{},sessions:[],settings:{...DEF_SETTINGS}};
 const save=k=>DB.set(k,S[k]).catch(e=>toast('Erreur d’enregistrement'));
 const saveSess=s=>DB.put(s).catch(e=>toast('Erreur d’enregistrement'));
 
@@ -478,7 +484,7 @@ function render(){
 /* ---------- ACCUEIL ---------- */
 function weekStats(ws){
   const we=addDays(ws,7);const done=S.sessions.filter(s=>s.done&&fromDk(s.date)>=ws&&fromDk(s.date)<we);
-  const planned=WEEK.filter(d=>S.plan[d]&&tplById(S.plan[d])).length;return {done,planned};
+  let planned=0;for(let i=0;i<7;i++)if(planFor(dk(addDays(ws,i))))planned++;return {done,planned};
 }
 function streak(){
   let n=0;const now=weekStart(new Date());
@@ -494,7 +500,7 @@ function vHome(){
   const lb=S.settings.lastBackup;
   if(S.sessions.some(s=>s.done)&&(!lb||Date.now()-lb>14*864e5))h+=`<div class="banner warn">${ic('save')}<div class="grow"><b>Pense à sauvegarder</b><div class="small muted">${lb?'Dernière sauvegarde il y a '+Math.floor((Date.now()-lb)/864e5)+' jours':'Aucune sauvegarde pour l’instant'}</div></div><button class="btn sm" data-a="backup">Sauver</button></div>`;
   if(examplePlanOn())h+=`<div class="banner" style="align-items:flex-start">${ic('cal')}<div class="grow"><b>Planning d’exemple</b><div class="small muted">Push, Pull et Jambes sont là pour t’aider à démarrer. Garde-les et modifie-les, ou repars de zéro.</div><div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-a="exClear">Vider le planning</button><button class="btn sm sec" data-a="exKeep">Garder</button></div></div></div>`;
-  const tpl=tplById(S.plan[dow]);const doneToday=sessOn(tk);
+  const tpl=planFor(tk);const doneToday=sessOn(tk);
   if(doneToday.length){
     const s=doneToday[doneToday.length-1];
     h+=`<div class="today"><div class="bar" style="background:${s.color||'var(--ac)'}"></div><div class="lab">Aujourd’hui · séance faite</div><div class="ttl">${esc(s.name)}</div><div class="small muted">${sessSets(s)} séries · ${fmtK(sessVolume(s))} kg · ${fmtDur(s.end-s.start)}</div><div class="row" style="margin-top:14px"><button class="btn sec sm" data-a="sdetail" data-id="${s.id}">Voir le détail</button><button class="btn ghost sm" data-a="pickStart">Autre séance</button></div></div>`;
@@ -503,18 +509,19 @@ function vHome(){
   }else{
     h+=`<div class="today"><div class="lab">Aujourd’hui</div><div class="ttl">Jour de repos</div><div class="small muted">Rien de prévu. Tu peux quand même t’entraîner.</div><div class="row" style="margin-top:14px"><button class="btn sm" data-a="pickStart">${ic('play','s')}Démarrer une séance</button></div></div>`;
   }
-  const ws=weekStart(now);
-  h+=`<div class="h2">Ma semaine</div><div class="week">`;
+  const ws=addDays(weekStart(now),7*homeWeekOff),we=addDays(ws,6);
+  const wl=homeWeekOff===0?'Ma semaine':homeWeekOff===1?'Semaine prochaine':homeWeekOff===-1?'Semaine dernière':'Du '+ws.getDate()+' '+MC[ws.getMonth()]+' au '+we.getDate()+' '+MC[we.getMonth()];
+  h+=`<div class="row between" style="margin:20px 0 8px"><button class="ibtn" style="width:32px;height:32px" data-a="hwk" data-n="-1" aria-label="Semaine précédente">${ic('left','s')}</button><div class="h2" style="margin:0">${wl}</div><button class="ibtn" style="width:32px;height:32px" data-a="hwk" data-n="1" aria-label="Semaine suivante">${ic('right','s')}</button></div><div class="week">`;
   WEEK.forEach((d,i)=>{
-    const day=addDays(ws,i),k=dk(day),t=tplById(S.plan[d]),dn=sessOn(k);
+    const day=addDays(ws,i),k=dk(day),t=planFor(k),dn=sessOn(k),ov=S.planDates[k]!==undefined;
     let st='';
-    if(dn.length)st=`<div class="st" style="background:${dn[0].color||'var(--ac)'};color:#140d24">${ic('check')}</div>`;
+    if(dn.length)st=`<div class="st" style="background:${dn[0].color||'var(--ac)'};color:var(--ink)">${ic('check')}</div>`;
     else if(t&&k<tk&&k>=since())st=`<div class="st" style="border:1.5px solid var(--red);color:var(--red)">${ic('x')}</div>`;
     else if(t)st=`<div class="st" style="border:1.5px solid ${t.color}"></div>`;
-    h+=`<button class="wd ${k===tk?'today':''}" data-a="planDay" data-d="${d}"><span class="d1">${JC[d]}</span><span class="d2">${day.getDate()}</span><span class="pl" style="${t?'color:'+t.color:''}">${t?esc(t.name):'Repos'}</span>${st}</button>`;
+    h+=`<button class="wd ${k===tk?'today':''} ${ov?'ov':''}" data-a="calDay" data-k="${k}"><span class="d1">${JC[d]}</span><span class="d2">${day.getDate()}</span><span class="pl" style="${t?'color:'+t.color:''}">${t?esc(t.name):'Repos'}</span>${st}</button>`;
   });
-  h+=`</div><div class="tiny dim" style="margin:8px 4px 0">Touche un jour pour choisir sa séance. Le planning se répète chaque semaine.</div>`;
-  const w=weekStats(ws),sk=streak();
+  h+=`</div><div class="tiny dim" style="margin:8px 4px 0">Touche un jour pour choisir sa séance : ce jour-là seulement, ou chaque semaine. Les flèches permettent de préparer les semaines suivantes. Souligné en pointillés : prévu pour ce jour uniquement.</div>`;
+  const w=weekStats(weekStart(now)),sk=streak();
   h+=`<div class="tiles" style="margin-top:16px"><div class="tile"><div class="small muted">Cette semaine</div><div class="v num">${w.done.length}<small> / ${Math.max(w.planned,w.done.length)} séances</small></div></div><div class="tile"><div class="small muted">Série en cours${qm('streak')}</div><div class="v num">${sk}<small> semaine${sk>1?'s':''}</small></div></div></div>`;
   const last=doneSess().slice(-3).reverse();
   if(last.length){h+=`<div class="h2">Dernières séances</div><div class="card list">`+last.map(s=>sessRow(s)).join('')+`</div>`}
@@ -531,8 +538,8 @@ function vCal(){
   for(let i=0;i<42;i++){
     const day=addDays(start,i),k=dk(day),inM=day.getMonth()===calM;
     if(i>=35&&!inM)break;
-    const ss=sessOn(k),t=tplById(S.plan[day.getDay()]);let dots=ss.map(s=>`<i style="background:${s.color||'var(--ac)'}"></i>`).join('');
-    if(!ss.length&&t)dots=k<tk?(k>=since()?'<i class="ms"></i>':''):'<i class="pl"></i>';
+    const ss=sessOn(k),t=planFor(k);let dots=ss.map(s=>`<i style="background:${s.color||'var(--ac)'}"></i>`).join('');
+    if(!ss.length&&t)dots=k<tk?(k>=since()?'<i class="ms"></i>':''):`<i class="pl" style="border-color:${t.color}"></i>`;
     h+=`<button class="c ${inM?'':'out'} ${k===tk?'td':''}" data-a="calDay" data-k="${k}" style="${inM?'':'opacity:.35'}"><span class="num">${day.getDate()}</span><span class="ds">${dots}</span></button>`;
   }
   h+=`</div><div class="row tiny muted" style="gap:14px;margin:10px 4px 0;flex-wrap:wrap"><span class="row" style="gap:5px"><span class="dot" style="background:var(--ac)"></span>Faite</span><span class="row" style="gap:5px"><span class="dot" style="border:1.5px solid var(--tx3)"></span>Prévue</span><span class="row" style="gap:5px"><span class="dot" style="border:1.5px solid var(--red)"></span>Manquée</span></div>`;
@@ -544,13 +551,38 @@ function vCal(){
   return {sub:'Historique',title:'Calendrier',html:h};
 }
 function daySheet(k){
-  const d=fromDk(k),t=tplById(S.plan[d.getDay()]),ss=sessOn(k),tk=dk(new Date());
-  let h=`<h3 style="text-transform:capitalize">${fmtDayLong(k)}</h3>`;
-  if(t)h+=`<div class="small muted" style="margin:-6px 0 12px">Prévu dans ton planning : <b style="color:${t.color}">${esc(t.name)}</b></div>`;
-  if(ss.length)h+=`<div class="card list" style="background:var(--s2)">${ss.map(sessRow).join('')}</div>`;
-  else h+=`<div class="muted small" style="margin-bottom:14px">${k>tk?'Ce jour est à venir.':'Aucune séance enregistrée ce jour.'}</div>`;
-  if(k<=tk)h+=`<button class="btn full" data-a="pickStart" data-k="${k}">${ic('plus','s')}${k===tk?'Démarrer une séance':'Ajouter une séance ce jour'}</button>`;
-  openSheet(h);
+  const d=fromDk(k),dow=d.getDay(),tk=dk(new Date()),ss=sessOn(k);let scope='day';
+  const body=openSheet('');
+  const draw=()=>{
+    const t=planFor(k),ov=S.planDates[k]!==undefined,wk=tplById(S.plan[dow]),cur=scope==='day'?(t?t.id:''):(wk?wk.id:'');
+    let h=`<h3 style="text-transform:capitalize">${fmtDayLong(k)}</h3>`;
+    if(ss.length)h+=`<div class="card list" style="background:var(--s2)">${ss.map(sessRow).join('')}</div>`;
+    if(k<tk){
+      if(t)h+=`<div class="small muted" style="margin:-6px 0 12px">Était prévu : <b style="color:${t.color}">${esc(t.name)}</b></div>`;
+      if(!ss.length)h+=`<div class="muted small" style="margin-bottom:14px">Aucune séance enregistrée ce jour.</div>`;
+      h+=`<button class="btn full" data-a="pickStart" data-k="${k}">${ic('plus','s')}Ajouter une séance ce jour</button>`;
+    }else{
+      if(k===tk)h+=`<button class="btn full" style="margin-bottom:14px" data-a="${t?'start':'pickStart'}" ${t?`data-id="${t.id}"`:`data-k="${k}"`}>${ic('play','s')}${t?'Commencer '+esc(t.name):'Démarrer une séance'}</button>`;
+      h+=`<div class="h2" style="margin-top:4px">Séance prévue</div>`;
+      h+=`<div class="seg" style="margin-top:0"><button data-x="sc" data-s="day" class="${scope==='day'?'on':''}">Ce jour uniquement</button><button data-x="sc" data-s="week" class="${scope==='week'?'on':''}">Chaque ${JOURS[dow]}</button></div>`;
+      h+=S.templates.map(x=>`<button class="opt ${cur===x.id?'on':''}" data-x="pl" data-id="${x.id}"><span class="dot" style="background:${x.color};width:12px;height:12px"></span><div class="grow"><div style="font-weight:600">${esc(x.name)}</div><div class="small muted">${x.items.length} exercices · ~${tplMinutes(x)} min</div></div>${cur===x.id?`<span style="color:var(--ac)">${ic('check')}</span>`:''}</button>`).join('');
+      h+=`<button class="opt ${!cur?'on':''}" data-x="pl" data-id=""><span class="dot" style="background:var(--s3);width:12px;height:12px"></span><div class="grow" style="font-weight:600">Repos</div>${!cur?`<span style="color:var(--ac)">${ic('check')}</span>`:''}</button>`;
+      h+=`<div class="tiny dim" style="margin:2px 4px 12px">${scope==='day'?(ov?`Prévu pour ce jour uniquement. Habituellement le ${JOURS[dow]} : ${wk?esc(wk.name):'repos'}.`:`Choisis une séance pour ce jour seulement. Le reste de ton planning ne change pas.`):`S’applique à tous les ${JOURS[dow]}s, sauf les jours prévus à part.`}</div>`;
+      if(ov&&scope==='day')h+=`<button class="btn full sec" data-x="reset">Revenir au planning habituel</button>`;
+      h+=`<button class="btn ghost full" style="margin-top:10px" data-x="new">${ic('plus','s')}Créer une séance type</button>`;
+    }
+    const st=body.scrollTop;body.innerHTML=h;body.scrollTop=st;
+  };
+  draw();
+  body.addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(!x)return;const a=x.dataset.x;
+    if(a==='sc'){scope=x.dataset.s;draw();return}
+    if(a==='new'){closeSheet();tplEditor();return}
+    if(a==='reset'){delete S.planDates[k];save('planDates');closeSheet();render();toast('Planning habituel rétabli pour ce jour');return}
+    if(a==='pl'){const id=x.dataset.id||null,t=tplById(id),lab=t?t.name:'Repos';
+      if(scope==='week'){S.plan[dow]=id;save('plan');toast(`Chaque ${JOURS[dow]} : ${lab}`)}
+      else{const wk=S.plan[dow]||null;if((id||null)===(tplById(wk)?wk:null))delete S.planDates[k];else S.planDates[k]=id||'rest';save('planDates');toast(`${fmtDay(k)} : ${lab}`)}
+      closeSheet();render()}
+  });
 }
 
 /* ---------- SÉANCES ---------- */
@@ -680,7 +712,7 @@ function tplEditor(id){
     if(a==='ss'){d.items[i].ss=!d.items[i].ss;draw()}
     if(a==='add')exPicker(ids=>{ids.forEach(eid=>{const e=exById(eid);d.items.push({id:uid(),exId:eid,sets:3,reps:e.type==='temps'?60:10,rest:S.settings.rest,ss:false})});draw()});
     if(a==='cancel')closeSheet();
-    if(a==='del'){if(!confirm(`Supprimer la séance type « ${d.name} » ? Ton historique est conservé.`))return;S.templates=S.templates.filter(t=>t.id!==id);WEEK.forEach(w=>{if(S.plan[w]===id)S.plan[w]=null});save('templates');save('plan');closeSheet();render();toast('Séance supprimée')}
+    if(a==='del'){if(!confirm(`Supprimer la séance type « ${d.name} » ? Ton historique est conservé.`))return;S.templates=S.templates.filter(t=>t.id!==id);WEEK.forEach(w=>{if(S.plan[w]===id)S.plan[w]=null});Object.keys(S.planDates).forEach(k=>{if(S.planDates[k]===id)delete S.planDates[k]});save('templates');save('plan');save('planDates');closeSheet();render();toast('Séance supprimée')}
     if(a==='ok'){
       d.name=($('#tn',body).value||'').trim();if(!d.name){toast('Donne un nom à la séance');return}
       if(d.items.length)d.items[d.items.length-1].ss=false;
@@ -743,24 +775,25 @@ function lineChart(pts,type,m){
   const xs=pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs);
   const X=v=>pts.length===1?L+(W-L-R)/2:L+(v-x0)/(x1-x0)*(W-L-R),Y=v=>T+(1-(v-mn)/(mx-mn))*(H-T-B);
   const lab=v=>type==='temps'?fmtSec(v):(Math.abs(v)>=1000?Math.round(v/100)/10+'k':fmtN(Math.round(v*10)/10));
-  let g='';for(let i=0;i<4;i++){const v=mn+(mx-mn)*i/3,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#2f2852" stroke-width="1"/><text x="${L-6}" y="${y+4}" fill="#726a99" font-size="10" text-anchor="end">${lab(v)}</text>`}
+  let g='';for(let i=0;i<4;i++){const v=mn+(mx-mn)*i/3,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y+4}" fill="var(--tx3)" font-size="10" text-anchor="end">${lab(v)}</text>`}
   const path=pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1)).join(' ');
-  const area=pts.length>1?`<path d="${path} L${X(x1).toFixed(1)} ${H-B} L${X(x0).toFixed(1)} ${H-B} Z" fill="rgba(181,107,255,.12)"/>`:'';
+  const area=pts.length>1?`<path d="${path} L${X(x1).toFixed(1)} ${H-B} L${X(x0).toFixed(1)} ${H-B} Z" fill="var(--acbg)"/>`:'';
   const d=t=>{const x=new Date(t);return x.getDate()+' '+MC[x.getMonth()]};
   const lastp=pts[pts.length-1];
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}${area}<path d="${path}" fill="none" stroke="#b56bff" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.length<=40?pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="#120f1f" stroke="#b56bff" stroke-width="2"/>`).join(''):''}<circle cx="${X(lastp.x)}" cy="${Y(lastp.y)}" r="5" fill="#b56bff"/><text x="${L}" y="${H-6}" fill="#726a99" font-size="10">${d(x0)}</text>${pts.length>1?`<text x="${W-R}" y="${H-6}" fill="#726a99" font-size="10" text-anchor="end">${d(x1)}</text>`:''}</svg>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}${area}<path d="${path}" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.length<=40?pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="var(--bg)" stroke="var(--ac)" stroke-width="2"/>`).join(''):''}<circle cx="${X(lastp.x)}" cy="${Y(lastp.y)}" r="5" fill="var(--ac)"/><text x="${L}" y="${H-6}" fill="var(--tx3)" font-size="10">${d(x0)}</text>${pts.length>1?`<text x="${W-R}" y="${H-6}" fill="var(--tx3)" font-size="10" text-anchor="end">${d(x1)}</text>`:''}</svg>`;
 }
 
 /* ---------- RÉGLAGES ---------- */
 function vSet(){
   const st=S.settings,lb=st.lastBackup,nS=doneSess().length;
   const tog=(k,l,d)=>`<div class="li"><div class="grow"><div>${l}</div>${d?`<div class="small muted">${d}</div>`:''}</div><button class="sw ${st[k]?'on':''}" data-a="tog" data-k="${k}" aria-label="${esc(l)}"></button></div>`;
-  let h=`<div class="h2">Sauvegarde</div><div class="card"><div class="small muted" style="margin-bottom:12px">${lb?'Dernière sauvegarde : '+fmtDay(dk(lb))+' ('+Math.floor((Date.now()-lb)/864e5)+' j)':'Aucune sauvegarde pour l’instant.'} Enregistre le .zip dans Fichiers ou iCloud Drive.</div><button class="btn full" data-a="backup">${ic('save','s')}Créer une sauvegarde (.zip)</button><button class="btn full sec" style="margin-top:10px" data-a="restore">Restaurer une sauvegarde</button></div>`;
+  let h=`<div class="h2">Apparence</div><div class="card"><div class="small muted" style="margin-bottom:10px">Thème de couleur</div><div class="themes">${Object.entries(THEMES).map(([k,t])=>`<button class="th ${(st.theme||'violet')===k?'on':''}" data-a="theme" data-t="${k}"><span class="sq" style="background:${t.v.bg}"><i style="width:40%;background:${t.v.ac}"></i><i style="width:22%;background:${t.v.s3}"></i></span>${t.name}</button>`).join('')}</div></div>`;
+  h+=`<div class="h2">Sauvegarde</div><div class="card"><div class="small muted" style="margin-bottom:12px">${lb?'Dernière sauvegarde : '+fmtDay(dk(lb))+' ('+Math.floor((Date.now()-lb)/864e5)+' j)':'Aucune sauvegarde pour l’instant.'} Enregistre le .zip dans Fichiers ou iCloud Drive.</div><button class="btn full" data-a="backup">${ic('save','s')}Créer une sauvegarde (.zip)</button><button class="btn full sec" style="margin-top:10px" data-a="restore">Restaurer une sauvegarde</button></div>`;
   h+=`<div class="h2">Pendant la séance</div><div class="card list"><div class="li"><div class="grow">Unité de saisie des charges<div class="small muted">Tout est enregistré en kg</div></div><div class="row" style="gap:6px">${['kg','lb'].map(u=>`<button class="chip ${st.unit===u?'on':''}" data-a="unit" data-u="${u}">${u}</button>`).join('')}</div></div><div class="li"><div class="grow">Repos par défaut<div class="small muted">Pour les nouveaux exercices</div></div><select data-a2="rest" style="width:auto">${RESTS.filter(r=>r).map(r=>`<option value="${r}" ${r==st.rest?'selected':''}>${fmtSec(r)}</option>`).join('')}</select></div>${tog('sound','Son à la fin du repos','Vérifie que le mode silencieux est coupé')}${tog('haptic','Vibration','Sur iPhone avec iOS 18 ou plus récent')}${tog('wake','Écran toujours allumé','Pendant une séance en cours')}</div>`;
   h+=`<div class="h2">Calculateur de disques</div><div class="card"><div class="field"><label>Barre par défaut</label><div class="chips">${[20,15,10,7,0].map(b=>`<button class="chip ${st.bar==b?'on':''}" data-a="bar" data-b="${b}">${b?b+' kg':'Sans barre'}</button>`).join('')}</div></div><div class="field"><label>Disques disponibles (par paire)</label><div class="chips" style="flex-wrap:wrap">${[25,20,15,10,5,2.5,2,1.25,1,0.5].map(p=>`<button class="chip ${st.plates.includes(p)?'on':''}" data-a="plate" data-p="${p}">${fmtN(p)}</button>`).join('')}</div></div><button class="btn full sec" data-a="plates">${ic('disc','s')}Ouvrir le calculateur</button></div>`;
   h+=`<div class="h2">Aide</div><div class="card"><button class="btn full sec" data-a="guide">Revoir le guide de démarrage</button>${examplePlanOn()?`<button class="btn full sec" style="margin-top:10px" data-a="exClear">Vider le planning d’exemple</button>`:''}<div class="tiny dim" style="margin-top:10px">Astuce : garde le doigt appuyé sur une icône pour savoir à quoi elle sert, et touche un « ? » pour comprendre un terme.</div></div>`;
   h+=`<div class="h2">Données</div><div class="card"><div class="small muted" style="margin-bottom:12px">${nS} séance${nS>1?'s':''} · ${S.templates.length} séances types · ${S.exercises.filter(e=>e.custom).length} exercices perso.<br>Tout est stocké uniquement sur cet iPhone, dans l’app de l’écran d’accueil. Aucun compte, rien n’est envoyé.</div><button class="btn full danger" data-a="wipe">Tout effacer</button></div>`;
-  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.3</div>`;
+  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.4</div>`;
   return {sub:'Préférences',title:'Réglages',html:h};
 }
 function platesSheet(target,unit){
@@ -969,25 +1002,25 @@ function planDay(d){
 
 /* ---------- image à partager ---------- */
 async function shareImage(s){
-  const W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const T=themeVars(),W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
   const F='-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif';
-  g.fillStyle='#120f1f';g.fillRect(0,0,W,H);
-  g.fillStyle='rgba(181,107,255,.10)';g.beginPath();g.arc(W-80,120,360,0,Math.PI*2);g.fill();
-  g.fillStyle='rgba(181,107,255,.06)';g.beginPath();g.arc(60,H-80,300,0,Math.PI*2);g.fill();
+  g.fillStyle=T.bg;g.fillRect(0,0,W,H);
+  g.fillStyle=T.acbg;g.beginPath();g.arc(W-80,120,360,0,Math.PI*2);g.fill();
+  g.fillStyle=T.acbg;g.beginPath();g.arc(60,H-80,300,0,Math.PI*2);g.fill();
   const rr=(x,y,w,h,r)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()};
-  g.fillStyle='#b56bff';g.font=`600 30px ${F}`;g.fillText('CARNET MUSCU',80,120);
-  g.fillStyle='#ece8ff';g.font=`800 92px ${F}`;let tt=s.name;while(g.measureText(tt).width>920&&tt.length>4)tt=tt.slice(0,-2);if(tt!==s.name)tt+='…';g.fillText(tt,80,228);
-  g.fillStyle='#a49cc8';g.font=`400 36px ${F}`;const dd=fmtDayLong(s.date);g.fillText(dd.charAt(0).toUpperCase()+dd.slice(1),80,290);
+  g.fillStyle=T.ac;g.font=`600 30px ${F}`;g.fillText('CARNET MUSCU',80,120);
+  g.fillStyle=T.tx;g.font=`800 92px ${F}`;let tt=s.name;while(g.measureText(tt).width>920&&tt.length>4)tt=tt.slice(0,-2);if(tt!==s.name)tt+='…';g.fillText(tt,80,228);
+  g.fillStyle=T.tx2;g.font=`400 36px ${F}`;const dd=fmtDayLong(s.date);g.fillText(dd.charAt(0).toUpperCase()+dd.slice(1),80,290);
   const st=[['Durée',fmtDur(s.end-s.start)],['Séries',String(sessSets(s))],['Volume',fmtK(sessVolume(s))+' kg']];
-  st.forEach((v,i)=>{const x=80+i*313;rr(x,340,293,150,28);g.fillStyle='#221c3d';g.fill();g.fillStyle='#a796ff';g.font=`500 28px ${F}`;g.fillText(v[0],x+28,392);g.fillStyle='#ece8ff';g.font=`700 46px ${F}`;g.fillText(v[1],x+28,458)});
+  st.forEach((v,i)=>{const x=80+i*313;rr(x,340,293,150,28);g.fillStyle=T.s2;g.fill();g.fillStyle=T.ac2;g.font=`500 28px ${F}`;g.fillText(v[0],x+28,392);g.fillStyle=T.tx;g.font=`700 46px ${F}`;g.fillText(v[1],x+28,458)});
   let y=570;const recs=new Set((s.records||[]).map(r=>r.ex));
   const done=s.items.filter(it=>it.sets.length),items=done.slice(0,9);
   items.forEach(it=>{const ty=it.type||exType(it);let best=it.sets[0];it.sets.forEach(x=>{if(ty==='charge'?e1rm(x.w,x.r)>e1rm(best.w,best.r):(x[keyField(ty)]||0)>(best[keyField(ty)]||0))best=x});
-    const nm=exName(it);g.fillStyle=recs.has(nm)?'#ffcf5c':'#ece8ff';g.font=`600 38px ${F}`;let n=nm;while(g.measureText(n).width>600&&n.length>4)n=n.slice(0,-2);if(n!==nm)n+='…';g.fillText(n,80,y);
-    g.fillStyle='#726a99';g.font=`400 28px ${F}`;g.fillText(it.sets.length+' séries',80,y+40);
-    g.fillStyle=recs.has(nm)?'#ffcf5c':'#b56bff';g.font=`700 40px ${F}`;g.textAlign='right';g.fillText((recs.has(nm)?'★ ':'')+setTxt(ty,best),W-80,y+8);g.textAlign='left';
-    g.strokeStyle='#2f2852';g.lineWidth=2;g.beginPath();g.moveTo(80,y+66);g.lineTo(W-80,y+66);g.stroke();y+=100});
-  if(done.length>9){g.fillStyle='#a49cc8';g.font=`400 30px ${F}`;g.fillText('+ '+(done.length-9)+' autres exercices',80,y+10)}
+    const nm=exName(it);g.fillStyle=recs.has(nm)?'#ffcf5c':T.tx;g.font=`600 38px ${F}`;let n=nm;while(g.measureText(n).width>600&&n.length>4)n=n.slice(0,-2);if(n!==nm)n+='…';g.fillText(n,80,y);
+    g.fillStyle=T.tx3;g.font=`400 28px ${F}`;g.fillText(it.sets.length+' séries',80,y+40);
+    g.fillStyle=recs.has(nm)?'#ffcf5c':T.ac;g.font=`700 40px ${F}`;g.textAlign='right';g.fillText((recs.has(nm)?'★ ':'')+setTxt(ty,best),W-80,y+8);g.textAlign='left';
+    g.strokeStyle=T.line;g.lineWidth=2;g.beginPath();g.moveTo(80,y+66);g.lineTo(W-80,y+66);g.stroke();y+=100});
+  if(done.length>9){g.fillStyle=T.tx2;g.font=`400 30px ${F}`;g.fillText('+ '+(done.length-9)+' autres exercices',80,y+10)}
   const foot=[];if((s.records||[]).length)foot.push(s.records.length+' record'+(s.records.length>1?'s':''));if(s.rpe)foot.push('RPE '+s.rpe+'/10');if(s.mood!=null)foot.push(MOODS[s.mood][0]);
   if(foot.length){g.fillStyle='#ffcf5c';g.font=`600 32px ${F}`;g.fillText(foot.join('  ·  '),80,H-80)}
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`seance-${s.date}.png`;
@@ -1001,7 +1034,7 @@ function download(blob,name){const a=document.createElement('a');a.href=URL.crea
 async function backup(){
   try{
     const zip=new JSZip();
-    const data={app:'carnet-muscu',version:1,exported:new Date().toISOString(),exercises:S.exercises,templates:S.templates,plan:S.plan,settings:S.settings,sessions:S.sessions};
+    const data={app:'carnet-muscu',version:1,exported:new Date().toISOString(),exercises:S.exercises,templates:S.templates,plan:S.plan,planDates:S.planDates,settings:S.settings,sessions:S.sessions};
     zip.file('carnet-muscu.json',JSON.stringify(data));
     zip.file('LISEZMOI.txt','Sauvegarde Carnet Muscu du '+new Date().toLocaleString('fr-FR')+'\nPour restaurer : Réglages > Restaurer une sauvegarde, puis choisis ce fichier .zip.\n');
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
@@ -1020,8 +1053,8 @@ async function restore(file){
     const d=JSON.parse(txt);if(d.app!=='carnet-muscu'||!Array.isArray(d.sessions))throw new Error('format');
     if(!confirm(`Restaurer la sauvegarde du ${new Date(d.exported).toLocaleDateString('fr-FR')} ? (${d.sessions.filter(s=>s.done).length} séances) Les données actuelles seront remplacées.`))return;
     await DB.clear();
-    S.exercises=d.exercises||[];S.templates=d.templates||[];S.plan=d.plan||{};S.settings={...DEF_SETTINGS,...(d.settings||{})};S.sessions=d.sessions;
-    await Promise.all([save('exercises'),save('templates'),save('plan'),save('settings'),...S.sessions.map(s=>DB.put(s))]);
+    S.exercises=d.exercises||[];S.templates=d.templates||[];S.plan=d.plan||{};S.planDates=d.planDates||{};S.settings={...DEF_SETTINGS,...(d.settings||{})};S.sessions=d.sessions;applyTheme(S.settings.theme);
+    await Promise.all([save('exercises'),save('templates'),save('plan'),save('planDates'),save('settings'),...S.sessions.map(s=>DB.put(s))]);
     render();toast('Sauvegarde restaurée');
   }catch(e){toast('Fichier non reconnu')}
 }
@@ -1051,7 +1084,7 @@ const A={
   plates:()=>platesSheet(),
   backup:()=>backup(),
   restore:()=>{$('#fileIn').value='';$('#fileIn').click()},
-  wipe:async()=>{if(!confirm('Effacer toutes les données de Carnet Muscu ?'))return;if(!confirm('Vraiment tout effacer ? Fais une sauvegarde avant si besoin. Cette action est définitive.'))return;await DB.clear();seed();S.sessions=[];S.settings={...DEF_SETTINGS};await Promise.all([save('exercises'),save('templates'),save('plan'),save('settings')]);render();toast('Données effacées')},
+  wipe:async()=>{if(!confirm('Effacer toutes les données de Carnet Muscu ?'))return;if(!confirm('Vraiment tout effacer ? Fais une sauvegarde avant si besoin. Cette action est définitive.'))return;await DB.clear();seed();S.sessions=[];S.planDates={};S.settings={...DEF_SETTINGS};applyTheme();await Promise.all([save('exercises'),save('templates'),save('plan'),save('planDates'),save('settings')]);render();toast('Données effacées')},
   liveMin:()=>{saveLive(true);closeLive()},
   finish:()=>finishSheet(),
   abandon:async()=>{if(!confirm('Abandonner cette séance ? Rien ne sera enregistré.'))return;await removeSession(L.id);stopRest();closeLive();toast('Séance abandonnée')},
@@ -1083,6 +1116,8 @@ const A={
   rAdj:el=>{if(!R)return;R.end+=(+el.dataset.n)*1000;R.total=Math.max(R.total,R.end-Date.now());tickRest()},
   rSkip:()=>stopRest(),
   help:el=>helpSheet(el.dataset.k),
+  hwk:el=>{homeWeekOff+=+el.dataset.n;render()},
+  theme:el=>{S.settings.theme=el.dataset.t;save('settings');applyTheme(el.dataset.t);render();toast('Thème : '+THEMES[el.dataset.t].name)},
   guide:()=>openGuide(),
   gNext:()=>{gI++;drawGuide()},
   gPrev:()=>{gI=Math.max(0,gI-1);drawGuide()},
@@ -1108,6 +1143,25 @@ document.addEventListener('focusin',e=>{if(e.target.classList&&e.target.classLis
 $('#fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(f)restore(f)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){tickRest();if(L&&!L.done&&!L.past){WL=null;wakeOn()}if(!L)render()}else if(L)saveLive(true)});
 
+/* ---------- planning à date ---------- */
+let homeWeekOff=0;
+function planFor(k){const o=S.planDates[k];if(o!==undefined)return o==='rest'?null:(tplById(o)||null);return tplById(S.plan[fromDk(k).getDay()])||null}
+
+/* ---------- thèmes de couleur ---------- */
+const mkT=(name,bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,rgb,acrgb)=>({name,v:{bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,acbg:`rgba(${acrgb},.15)`,acline:`rgba(${acrgb},.45)`,bgt:`rgba(${rgb},.94)`,bgs:`rgba(${rgb},.55)`}});
+const THEMES={
+  violet:mkT('Violet','#120f1f','#1a1630','#221c3d','#2c2550','#2f2852','#ece8ff','#a49cc8','#726a99','#b56bff','#a796ff','#140d24','18,15,31','181,107,255'),
+  ocean:mkT('Océan','#0b1420','#111d2c','#172638','#1f3146','#22354c','#e6f0ff','#9cb0c9','#677b95','#4fa8ff','#82c4ff','#03111f','11,20,32','79,168,255'),
+  foret:mkT('Forêt','#0c1512','#12201a','#182a22','#20362c','#223a30','#e4f5ec','#9bb8a9','#678676','#3ddc97','#7de6b6','#03170d','12,21,18','61,220,151'),
+  braise:mkT('Braise','#16100c','#201712','#2a1f18','#36291f','#3a2c22','#fbeee4','#c4a996','#8f7564','#ff8a3d','#ffad75','#1f0d02','22,16,12','255,138,61'),
+  rose:mkT('Rose','#170e16','#22141f','#2d1a29','#392235','#3c2538','#fde8f6','#c69fbb','#8f6a86','#ff5fb4','#ff90cb','#22031a','23,14,22','255,95,180'),
+  graphite:mkT('Graphite','#0a0a0b','#141416','#1c1c1f','#27272b','#2b2b30','#f2f2f3','#a7a7ad','#707076','#f2f2f3','#cfcfd4','#0a0a0b','10,10,11','242,242,243'),
+};
+function applyTheme(k){const t=(THEMES[k]||THEMES.violet).v,r=document.documentElement.style;Object.entries(t).forEach(([n,v])=>r.setProperty('--'+n,v));
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t.bg);try{localStorage.setItem('cm-theme',THEMES[k]?k:'violet')}catch(e){}}
+function themeVars(){const cs=getComputedStyle(document.documentElement),o={};['bg','s1','s2','s3','line','tx','tx2','tx3','ac','ac2','acbg'].forEach(n=>o[n]=cs.getPropertyValue('--'+n).trim());return o}
+try{const k=localStorage.getItem('cm-theme');if(k&&k!=='violet')applyTheme(k)}catch(e){}
+
 /* ---------- aide : ?, appui long, guide, planning d'exemple ---------- */
 const qm=k=>`<button type="button" class="qm" data-a="help" data-k="${k}" aria-label="Explication">?</button>`;
 const HELP={
@@ -1121,7 +1175,7 @@ function helpSheet(k){const h=HELP[k];if(!h)return;const body=openSheet(`<h3>${h
 
 const EX_IDS=['t1','t2','t3'];
 function examplePlanOn(){return S.settings.examplePlan!==false&&S.templates.some(t=>EX_IDS.includes(t.id))}
-function clearExamplePlan(){S.templates=S.templates.filter(t=>!EX_IDS.includes(t.id));WEEK.forEach(d=>{if(EX_IDS.includes(S.plan[d]))S.plan[d]=null});S.settings.examplePlan=false;save('templates');save('plan');save('settings')}
+function clearExamplePlan(){S.templates=S.templates.filter(t=>!EX_IDS.includes(t.id));WEEK.forEach(d=>{if(EX_IDS.includes(S.plan[d]))S.plan[d]=null});Object.keys(S.planDates).forEach(k=>{if(EX_IDS.includes(S.planDates[k]))delete S.planDates[k]});save('planDates');S.settings.examplePlan=false;save('templates');save('plan');save('settings')}
 
 /* appui long sur une icône : petite explication */
 let tipT=null,tipXY=null,tipShown=false,tipH=null;
@@ -1139,7 +1193,7 @@ document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closes
 let gI=0;
 function guideSlides(){
   const s=[
-    {ic:'home',t:'Bienvenue dans Carnet Muscu',p:['Ton carnet d’entraînement, rien que pour toi. Tout reste sur ton téléphone, sans compte.','Sur l’<b>Accueil</b>, la séance du jour t’attend avec un bouton <b>Commencer</b>.','Pour choisir quelle séance faire chaque jour, touche un jour dans <b>Ma semaine</b>. Tes séances se créent dans l’onglet <b>Séances</b>.']},
+    {ic:'home',t:'Bienvenue dans Carnet Muscu',p:['Ton carnet d’entraînement, rien que pour toi. Tout reste sur ton téléphone, sans compte.','Sur l’<b>Accueil</b>, la séance du jour t’attend avec un bouton <b>Commencer</b>.','Pour choisir la séance d’un jour, touche ce jour dans <b>Ma semaine</b> ou dans le <b>Calendrier</b> : pour ce jour-là seulement, ou chaque semaine. Tes séances se créent dans l’onglet <b>Séances</b>.']},
     {ic:'dumb',t:'Pendant la séance',p:['Tes poids et répétitions de la dernière fois sont <b>déjà remplis</b>. Ajuste si besoin.','Touche <b>✓</b> pour valider chaque série. Une série non validée n’est pas enregistrée.','Le <b>repos</b> se lance tout seul après chaque série. Un doute sur une icône ? <b>Garde le doigt appuyé dessus</b>.']},
     {ic:'chart',t:'Suis tes progrès',p:['Le <b>Calendrier</b> garde tout ton historique. L’onglet <b>Progrès</b> montre tes records et tes courbes.','Un terme pas clair, comme RPE ou volume ? Touche le petit <b>?</b> à côté.','Pense à faire une <b>sauvegarde</b> de temps en temps dans Réglages.']},
   ];
@@ -1161,10 +1215,11 @@ function closeGuide(){$('#guide').classList.remove('on');if(!S.settings.seenGuid
     await DB.open();
     const ex=await DB.get('exercises');
     if(!ex){seed();await Promise.all([save('exercises'),save('templates'),save('plan'),save('settings')])}
-    else{S.exercises=ex;S.templates=(await DB.get('templates'))||[];S.plan=(await DB.get('plan'))||{};S.settings={...DEF_SETTINGS,...((await DB.get('settings'))||{})}}
+    else{S.exercises=ex;S.templates=(await DB.get('templates'))||[];S.plan=(await DB.get('plan'))||{};S.planDates=(await DB.get('planDates'))||{};S.settings={...DEF_SETTINGS,...((await DB.get('settings'))||{})}}
     S.sessions=(await DB.all())||[];
   }catch(e){seed();toast('Stockage indisponible : les données ne seront pas conservées')}
   if(!S.settings.since){S.settings.since=dk(new Date());save('settings')}
+  applyTheme(S.settings.theme);
   render();
   if(!S.settings.seenGuide)openGuide();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
