@@ -199,6 +199,25 @@ body.lv #restbar{bottom:calc(12px + var(--sab))}
 .rpe button{height:38px;border-radius:10px;background:var(--s2);font-weight:600;color:var(--tx2)}
 .rpe button.on{background:var(--ac);color:#140d24}
 .chart{width:100%;display:block}
+/* aide : ?, appui long, guide */
+.qm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--tx3);color:var(--tx2);font-size:12px;font-weight:700;line-height:1;vertical-align:middle;margin-left:4px;flex:none;position:relative}
+.qm::after{content:"";position:absolute;inset:-10px}
+[data-tip]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#tip{position:fixed;z-index:300;left:12px;top:12px;background:var(--s3);color:var(--tx);border:1px solid var(--acline);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.35;opacity:0;pointer-events:none;transition:opacity .15s;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#tip.on{opacity:1}
+#guide{position:fixed;inset:0;z-index:250;background:var(--bg);display:none;flex-direction:column;padding:calc(var(--sat) + 12px) 24px calc(var(--sab) + 20px)}
+#guide.on{display:flex}
+.g-skip{align-self:flex-end;color:var(--tx2);font-size:15px;padding:8px 4px}
+.g-body{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;width:100%}
+.g-ic{width:76px;height:76px;border-radius:24px;background:var(--acbg);color:var(--ac);display:flex;align-items:center;justify-content:center;margin-bottom:22px}
+.g-ic svg{width:38px;height:38px}
+.g-body h2{font-size:28px;margin:0 0 14px;letter-spacing:-.4px;line-height:1.15}
+.g-body p{color:var(--tx2);font-size:16px;line-height:1.5;margin:0 0 12px}
+.g-body p b{color:var(--tx)}
+.g-dots{display:flex;gap:6px;justify-content:center;margin:18px 0}
+.g-dots i{width:7px;height:7px;border-radius:4px;background:var(--s3);transition:width .2s}
+.g-dots i.on{width:20px;background:var(--ac)}
+.g-act{display:flex;flex-direction:column;gap:10px;max-width:440px;margin:0 auto;width:100%}
 </style>
 </head>
 <body>
@@ -208,6 +227,8 @@ body.lv #restbar{bottom:calc(12px + var(--sab))}
 <div id="live"></div>
 <div id="restbar"></div>
 <div id="toast"></div>
+<div id="guide"></div>
+<div id="tip" role="tooltip"></div>
 <label id="hapt" aria-hidden="true"><input type="checkbox" switch></label>
 <input type="file" id="fileIn" accept=".zip,.json,application/zip,application/json" style="display:none">
 <script>/*!
@@ -472,6 +493,7 @@ function vHome(){
   if(act)h+=`<div class="banner">${ic('timer')}<div class="grow"><b>Séance en cours</b><div class="small muted ell">${esc(act.name)}${act.past?' · '+fmtDay(act.date):' · depuis '+fmtDur(Date.now()-act.start)}</div></div><button class="btn sm" data-a="resume">Reprendre</button></div>`;
   const lb=S.settings.lastBackup;
   if(S.sessions.some(s=>s.done)&&(!lb||Date.now()-lb>14*864e5))h+=`<div class="banner warn">${ic('save')}<div class="grow"><b>Pense à sauvegarder</b><div class="small muted">${lb?'Dernière sauvegarde il y a '+Math.floor((Date.now()-lb)/864e5)+' jours':'Aucune sauvegarde pour l’instant'}</div></div><button class="btn sm" data-a="backup">Sauver</button></div>`;
+  if(examplePlanOn())h+=`<div class="banner" style="align-items:flex-start">${ic('cal')}<div class="grow"><b>Planning d’exemple</b><div class="small muted">Push, Pull et Jambes sont là pour t’aider à démarrer. Garde-les et modifie-les, ou repars de zéro.</div><div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-a="exClear">Vider le planning</button><button class="btn sm sec" data-a="exKeep">Garder</button></div></div></div>`;
   const tpl=tplById(S.plan[dow]);const doneToday=sessOn(tk);
   if(doneToday.length){
     const s=doneToday[doneToday.length-1];
@@ -493,7 +515,7 @@ function vHome(){
   });
   h+=`</div><div class="tiny dim" style="margin:8px 4px 0">Touche un jour pour choisir sa séance. Le planning se répète chaque semaine.</div>`;
   const w=weekStats(ws),sk=streak();
-  h+=`<div class="tiles" style="margin-top:16px"><div class="tile"><div class="small muted">Cette semaine</div><div class="v num">${w.done.length}<small> / ${Math.max(w.planned,w.done.length)} séances</small></div></div><div class="tile"><div class="small muted">Série en cours</div><div class="v num">${sk}<small> semaine${sk>1?'s':''}</small></div></div></div>`;
+  h+=`<div class="tiles" style="margin-top:16px"><div class="tile"><div class="small muted">Cette semaine</div><div class="v num">${w.done.length}<small> / ${Math.max(w.planned,w.done.length)} séances</small></div></div><div class="tile"><div class="small muted">Série en cours${qm('streak')}</div><div class="v num">${sk}<small> semaine${sk>1?'s':''}</small></div></div></div>`;
   const last=doneSess().slice(-3).reverse();
   if(last.length){h+=`<div class="h2">Dernières séances</div><div class="card list">`+last.map(s=>sessRow(s)).join('')+`</div>`}
   return {sub:fmtDayLong(tk),title:'Carnet Muscu',html:h};
@@ -516,7 +538,7 @@ function vCal(){
   h+=`</div><div class="row tiny muted" style="gap:14px;margin:10px 4px 0;flex-wrap:wrap"><span class="row" style="gap:5px"><span class="dot" style="background:var(--ac)"></span>Faite</span><span class="row" style="gap:5px"><span class="dot" style="border:1.5px solid var(--tx3)"></span>Prévue</span><span class="row" style="gap:5px"><span class="dot" style="border:1.5px solid var(--red)"></span>Manquée</span></div>`;
   const ms=doneSess().filter(s=>{const d=fromDk(s.date);return d.getFullYear()===calY&&d.getMonth()===calM}).reverse();
   const vol=ms.reduce((a,s)=>a+sessVolume(s),0),dur=ms.reduce((a,s)=>a+(s.end-s.start),0);
-  h+=`<div class="tiles" style="margin-top:16px"><div class="tile"><div class="small muted">Séances du mois</div><div class="v num">${ms.length}</div></div><div class="tile"><div class="small muted">Volume du mois</div><div class="v num">${fmtK(vol)}<small> kg</small></div></div></div>`;
+  h+=`<div class="tiles" style="margin-top:16px"><div class="tile"><div class="small muted">Séances du mois</div><div class="v num">${ms.length}</div></div><div class="tile"><div class="small muted">Volume du mois${qm('volume')}</div><div class="v num">${fmtK(vol)}<small> kg</small></div></div></div>`;
   if(ms.length)h+=`<div class="h2">Séances du mois · ${fmtDur(dur)}</div><div class="card list">${ms.map(sessRow).join('')}</div>`;
   else h+=`<div class="empty">Aucune séance ce mois-ci.<br>Touche un jour pour en ajouter une.</div>`;
   return {sub:'Historique',title:'Calendrier',html:h};
@@ -538,7 +560,7 @@ function vSeances(){
     if(!S.templates.length)h+=`<div class="empty"><b>Crée ta première séance type</b>Choisis tes exercices, tes séries et tes temps de repos.</div>`;
     S.templates.forEach(t=>{
       const days=WEEK.filter(d=>S.plan[d]===t.id).map(d=>JC[d]);
-      h+=`<div class="tpl"><div class="bar" style="background:${t.color}"></div><button class="grow" style="text-align:left" data-a="tplEdit" data-id="${t.id}"><div style="font-weight:650;font-size:17px">${esc(t.name)}</div><div class="small muted">${t.items.length} exercices · ~${tplMinutes(t)} min${days.length?' · '+days.join(', '):''}</div></button><button class="ibtn ac" data-a="start" data-id="${t.id}" aria-label="Commencer">${ic('play','s')}</button></div>`;
+      h+=`<div class="tpl"><div class="bar" style="background:${t.color}"></div><button class="grow" style="text-align:left" data-a="tplEdit" data-id="${t.id}"><div style="font-weight:650;font-size:17px">${esc(t.name)}${examplePlanOn()&&EX_IDS.includes(t.id)?' <span class="badge">Exemple</span>':''}</div><div class="small muted">${t.items.length} exercices · ~${tplMinutes(t)} min${days.length?' · '+days.join(', '):''}</div></button><button class="ibtn ac" data-a="start" data-id="${t.id}" aria-label="Commencer">${ic('play','s')}</button></div>`;
     });
     h+=`<button class="btn full ghost" style="margin-top:6px" data-a="tplEdit">${ic('plus','s')}Nouvelle séance type</button>`;
   }else{
@@ -583,12 +605,12 @@ function exSheet(id){
   if(e.note)html+=`<div class="card" style="background:var(--s2)">${esc(e.note)}</div>`;
   if(b){
     html+=`<div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Meilleure perf</div><div class="v num" style="font-size:20px">${setTxt(e.type,b.best.x)}</div><div class="tiny dim">${fmtDay(b.bd)}</div></div>`;
-    html+=e.type==='charge'?`<div class="tile" style="background:var(--s2)"><div class="small muted">1RM estimé</div><div class="v num" style="font-size:20px">${fmtN(Math.round(b.be*10)/10)} kg</div><div class="tiny dim">${fmtDay(b.bed)}</div></div></div>`:`<div class="tile" style="background:var(--s2)"><div class="small muted">Séances</div><div class="v num" style="font-size:20px">${b.count}</div></div></div>`;
+    html+=e.type==='charge'?`<div class="tile" style="background:var(--s2)"><div class="small muted">1RM estimé${qm('1rm')}</div><div class="v num" style="font-size:20px">${fmtN(Math.round(b.be*10)/10)} kg</div><div class="tiny dim">${fmtDay(b.bed)}</div></div></div>`:`<div class="tile" style="background:var(--s2)"><div class="small muted">Séances</div><div class="v num" style="font-size:20px">${b.count}</div></div></div>`;
     const m=METRICS[e.type][0][0];
     html+=`<div class="card" style="background:var(--s2)"><div class="small muted" style="margin-bottom:4px">${METRICS[e.type][0][1]}</div>${lineChart(h.map(x=>({x:x.s.start,y:metric(e.type,x.sets,m)})),e.type,m)}</div>`;
     html+=`<div class="h2">Historique</div><div class="card list" style="background:var(--s2)">`+h.slice(-8).reverse().map(x=>`<div class="li"><div class="grow"><div class="small" style="font-weight:600">${fmtDay(x.s.date)} · ${esc(x.s.name)}</div><div class="small muted">${x.sets.map(s=>setTxt(e.type,s)).join('  ·  ')}</div></div></div>`).join('')+`</div>`;
   }else html+=`<div class="empty">Pas encore de perf enregistrée pour cet exercice.</div>`;
-  html+=`<div class="stick"><button class="btn sec grow" data-x="edit">${ic('edit','s')}Modifier</button>${e.custom?`<button class="btn danger" data-x="del">${ic('trash','s')}</button>`:''}</div>`;
+  html+=`<div class="stick"><button class="btn sec grow" data-x="edit">${ic('edit','s')}Modifier</button>${e.custom?`<button class="btn danger" data-x="del" data-tip="Supprimer l’exercice">${ic('trash','s')}</button>`:''}</div>`;
   const body=openSheet(html);
   body.addEventListener('click',ev=>{const x=ev.target.closest('[data-x]');if(!x)return;
     if(x.dataset.x==='edit'){closeSheet();exEditor(id)}
@@ -634,8 +656,8 @@ function tplEditor(id){
     d.items.forEach((it,i)=>{
       const ty=exType(it),c=chain(d.items,i);
       const rl=ty==='temps'?'Secondes':ty==='distance'?null:'Reps';
-      h+=`<div class="it ${c.on?'ssl':''}"><div class="row" style="gap:6px"><div class="grow"><div style="font-weight:600" class="ell">${esc(exName(it))}</div>${c.on?`<div class="tiny" style="color:var(--ac)">Superset</div>`:''}</div>
-      <button class="ibtn" style="width:32px;height:32px" data-x="mv" data-i="${i}" data-n="-1">${ic('up','s')}</button><button class="ibtn" style="width:32px;height:32px" data-x="mv" data-i="${i}" data-n="1">${ic('down','s')}</button><button class="ibtn" style="width:32px;height:32px;color:var(--red)" data-x="rm" data-i="${i}">${ic('x','s')}</button></div>
+      h+=`<div class="it ${c.on?'ssl':''}"><div class="row" style="gap:6px"><div class="grow"><div style="font-weight:600" class="ell">${esc(exName(it))}</div>${c.on?`<div class="tiny" style="color:var(--ac)">Superset${qm('superset')}</div>`:''}</div>
+      <button class="ibtn" style="width:32px;height:32px" data-x="mv" data-i="${i}" data-n="-1" data-tip="Monter l’exercice">${ic('up','s')}</button><button class="ibtn" style="width:32px;height:32px" data-x="mv" data-i="${i}" data-n="1" data-tip="Descendre l’exercice">${ic('down','s')}</button><button class="ibtn" style="width:32px;height:32px;color:var(--red)" data-x="rm" data-i="${i}" data-tip="Retirer de la séance type">${ic('x','s')}</button></div>
       <div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
       <div><div class="mini">Séries</div><div class="step"><button data-x="st" data-i="${i}" data-f="sets" data-n="-1">−</button><span>${it.sets}</span><button data-x="st" data-i="${i}" data-f="sets" data-n="1">+</button></div></div>
       ${rl?`<div><div class="mini">${rl}</div><div class="step"><button data-x="st" data-i="${i}" data-f="reps" data-n="-1">−</button><span>${it.reps}</span><button data-x="st" data-i="${i}" data-f="reps" data-n="1">+</button></div></div>`:''}
@@ -685,7 +707,7 @@ function vWeek(){
   const W=weekData(ws),P=weekData(addDays(ws,-7));
   const diff=(a,b,u='')=>{if(!b)return '';const p=Math.round((a-b)/b*100);return `<div class="tiny" style="color:${p>=0?'var(--ok)':'var(--red)'}">${p>=0?'+':''}${p} % vs sem. préc.</div>`};
   let h=`<div class="row between" style="margin-bottom:10px"><button class="ibtn" data-a="wk" data-n="-1">${ic('left')}</button><b>${weekOff===0?'Cette semaine':weekOff===-1?'Semaine dernière':'Du '+ws.getDate()+' '+MC[ws.getMonth()]+' au '+we.getDate()+' '+MC[we.getMonth()]}</b><button class="ibtn" data-a="wk" data-n="1" ${weekOff>=0?'style="opacity:.3"':''}>${ic('right')}</button></div>`;
-  h+=`<div class="tiles"><div class="tile"><div class="small muted">Séances</div><div class="v num">${W.ss.length}</div>${diff(W.ss.length,P.ss.length)}</div><div class="tile"><div class="small muted">Durée</div><div class="v num" style="font-size:20px">${fmtDur(W.dur)}</div>${diff(W.dur,P.dur)}</div><div class="tile"><div class="small muted">Séries</div><div class="v num">${W.sets}</div>${diff(W.sets,P.sets)}</div><div class="tile"><div class="small muted">Volume</div><div class="v num" style="font-size:20px">${fmtK(W.vol)}<small> kg</small></div>${diff(W.vol,P.vol)}</div></div>`;
+  h+=`<div class="tiles"><div class="tile"><div class="small muted">Séances</div><div class="v num">${W.ss.length}</div>${diff(W.ss.length,P.ss.length)}</div><div class="tile"><div class="small muted">Durée</div><div class="v num" style="font-size:20px">${fmtDur(W.dur)}</div>${diff(W.dur,P.dur)}</div><div class="tile"><div class="small muted">Séries</div><div class="v num">${W.sets}</div>${diff(W.sets,P.sets)}</div><div class="tile"><div class="small muted">Volume${qm('volume')}</div><div class="v num" style="font-size:20px">${fmtK(W.vol)}<small> kg</small></div>${diff(W.vol,P.vol)}</div></div>`;
   const ms=Object.entries(W.mus).sort((a,b)=>b[1].sets-a[1].sets);
   if(ms.length){const mx=Math.max(...ms.map(m=>m[1].sets));
     h+=`<div class="h2">Séries par groupe musculaire</div><div class="card bars">`+ms.map(([m,v])=>{const pv=(P.mus[m]||{}).sets||0;return `<div class="b"><div class="row between small"><span>${esc(m)}</span><span class="num muted">${v.sets} séries${v.vol?' · '+fmtK(v.vol)+' kg':''}${pv?` <span class="dim">(${pv})</span>`:''}</span></div><div class="track"><div class="fill" style="width:${v.sets/mx*100}%"></div></div></div>`}).join('')+`<div class="tiny dim" style="margin-top:8px">Entre parenthèses : la semaine précédente.</div></div>`;
@@ -696,7 +718,7 @@ function vWeek(){
 function vRecords(){
   const L=S.exercises.map(e=>({e,b:bestOf(e.id)})).filter(x=>x.b).sort((a,b)=>MUSCLES.indexOf(a.e.muscle)-MUSCLES.indexOf(b.e.muscle)||a.e.name.localeCompare(b.e.name,'fr'));
   if(!L.length)return `<div class="empty"><b>Pas encore de records</b>Ils apparaîtront ici après tes premières séances.</div>`;
-  let h='',cur='';
+  let h=`<div class="tiny dim" style="margin:0 4px 4px">« 1RM est. » : estimation de ta charge max sur une seule répétition${qm('1rm')}</div>`,cur='';
   L.forEach(({e,b})=>{if(e.muscle!==cur){if(cur)h+='</div>';cur=e.muscle;h+=`<div class="h2">${esc(cur)}</div><div class="card list tight">`}
     h+=`<button class="li" style="width:100%;text-align:left" data-a="exSheet" data-id="${e.id}"><span style="color:var(--gold)">${ic('trophy','s')}</span><div class="grow"><div style="font-weight:550" class="ell">${esc(e.name)}</div><div class="small muted">${fmtDay(b.bd)}${e.type==='charge'?' · 1RM est. '+fmtN(Math.round(b.be*10)/10)+' kg':''}</div></div><b class="num">${setTxt(e.type,b.best.x)}</b></button>`});
   return h+'</div>';
@@ -710,7 +732,7 @@ function vCurves(){
   let o=`<button class="card row" style="width:100%;text-align:left" data-a="curveEx"><div class="grow"><div class="small muted">Exercice</div><div style="font-weight:650;font-size:17px">${esc(e.name)}</div></div>${ic('down')}</button>`;
   o+=`<div class="chips">${M.map(m=>`<button class="chip ${progM===m[0]?'on':''}" data-a="curveM" data-m="${m[0]}">${m[1]}</button>`).join('')}</div>`;
   const first=pts[0].y,lastv=pts[pts.length-1].y;
-  o+=`<div class="card"><div class="row between"><div><div class="small muted">Dernière</div><div style="font-size:22px;font-weight:700" class="num">${fmtMetric(e.type,progM,lastv)}</div></div><div style="text-align:right"><div class="small muted">Depuis le début</div><div style="font-size:16px;font-weight:600;color:${lastv>=first?'var(--ok)':'var(--red)'}" class="num">${lastv>=first?'+':''}${e.type==='temps'?fmtSec(lastv-first):fmtN(Math.round((lastv-first)*10)/10)}</div></div></div>${lineChart(pts,e.type,progM)}</div>`;
+  o+=`<div class="card"><div class="row between"><div><div class="small muted">Dernière${progM==='e1rm'?qm('1rm'):progM==='vol'&&e.type==='charge'?qm('volume'):''}</div><div style="font-size:22px;font-weight:700" class="num">${fmtMetric(e.type,progM,lastv)}</div></div><div style="text-align:right"><div class="small muted">Depuis le début</div><div style="font-size:16px;font-weight:600;color:${lastv>=first?'var(--ok)':'var(--red)'}" class="num">${lastv>=first?'+':''}${e.type==='temps'?fmtSec(lastv-first):fmtN(Math.round((lastv-first)*10)/10)}</div></div></div>${lineChart(pts,e.type,progM)}</div>`;
   o+=`<div class="h2">Séances (${h.length})</div><div class="card list">`+h.slice().reverse().slice(0,15).map(x=>`<div class="li"><div class="grow"><div class="small" style="font-weight:600">${fmtDay(x.s.date)} · ${esc(x.s.name)}</div><div class="small muted">${x.sets.map(s=>setTxt(e.type,s)).join('  ·  ')}</div></div><b class="num small">${fmtMetric(e.type,progM,metric(e.type,x.sets,progM))}</b></div>`).join('')+`</div>`;
   return o;
 }
@@ -736,8 +758,9 @@ function vSet(){
   let h=`<div class="h2">Sauvegarde</div><div class="card"><div class="small muted" style="margin-bottom:12px">${lb?'Dernière sauvegarde : '+fmtDay(dk(lb))+' ('+Math.floor((Date.now()-lb)/864e5)+' j)':'Aucune sauvegarde pour l’instant.'} Enregistre le .zip dans Fichiers ou iCloud Drive.</div><button class="btn full" data-a="backup">${ic('save','s')}Créer une sauvegarde (.zip)</button><button class="btn full sec" style="margin-top:10px" data-a="restore">Restaurer une sauvegarde</button></div>`;
   h+=`<div class="h2">Pendant la séance</div><div class="card list"><div class="li"><div class="grow">Unité de saisie des charges<div class="small muted">Tout est enregistré en kg</div></div><div class="row" style="gap:6px">${['kg','lb'].map(u=>`<button class="chip ${st.unit===u?'on':''}" data-a="unit" data-u="${u}">${u}</button>`).join('')}</div></div><div class="li"><div class="grow">Repos par défaut<div class="small muted">Pour les nouveaux exercices</div></div><select data-a2="rest" style="width:auto">${RESTS.filter(r=>r).map(r=>`<option value="${r}" ${r==st.rest?'selected':''}>${fmtSec(r)}</option>`).join('')}</select></div>${tog('sound','Son à la fin du repos','Vérifie que le mode silencieux est coupé')}${tog('haptic','Vibration','Sur iPhone avec iOS 18 ou plus récent')}${tog('wake','Écran toujours allumé','Pendant une séance en cours')}</div>`;
   h+=`<div class="h2">Calculateur de disques</div><div class="card"><div class="field"><label>Barre par défaut</label><div class="chips">${[20,15,10,7,0].map(b=>`<button class="chip ${st.bar==b?'on':''}" data-a="bar" data-b="${b}">${b?b+' kg':'Sans barre'}</button>`).join('')}</div></div><div class="field"><label>Disques disponibles (par paire)</label><div class="chips" style="flex-wrap:wrap">${[25,20,15,10,5,2.5,2,1.25,1,0.5].map(p=>`<button class="chip ${st.plates.includes(p)?'on':''}" data-a="plate" data-p="${p}">${fmtN(p)}</button>`).join('')}</div></div><button class="btn full sec" data-a="plates">${ic('disc','s')}Ouvrir le calculateur</button></div>`;
+  h+=`<div class="h2">Aide</div><div class="card"><button class="btn full sec" data-a="guide">Revoir le guide de démarrage</button>${examplePlanOn()?`<button class="btn full sec" style="margin-top:10px" data-a="exClear">Vider le planning d’exemple</button>`:''}<div class="tiny dim" style="margin-top:10px">Astuce : garde le doigt appuyé sur une icône pour savoir à quoi elle sert, et touche un « ? » pour comprendre un terme.</div></div>`;
   h+=`<div class="h2">Données</div><div class="card"><div class="small muted" style="margin-bottom:12px">${nS} séance${nS>1?'s':''} · ${S.templates.length} séances types · ${S.exercises.filter(e=>e.custom).length} exercices perso.<br>Tout est stocké uniquement sur cet iPhone, dans l’app de l’écran d’accueil. Aucun compte, rien n’est envoyé.</div><button class="btn full danger" data-a="wipe">Tout effacer</button></div>`;
-  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.2</div>`;
+  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.3</div>`;
   return {sub:'Préférences',title:'Réglages',html:h};
 }
 function platesSheet(target,unit){
@@ -809,15 +832,15 @@ function cellPh(it,k,f){
 }
 function renderLive(){
   const s=L,b=$('#live .lv-b'),st=b?b.scrollTop:0;
-  let h=`<div class="lv-h"><button class="ibtn" data-a="liveMin" aria-label="Réduire">${ic('down')}</button><div class="t"><b class="ell">${esc(s.name)}</b><span class="num" id="lvT">${s.done?'Modification · '+fmtDay(s.date):s.past?fmtDayLong(s.date):fmtSec((Date.now()-s.start)/1000)}</span></div>${s.items.some(it=>(it.type||exType(it))==='charge')?`<button class="chip ${S.settings.unit==='lb'?'on':''}" data-a="lvUnit" style="height:34px;padding:0 10px">${S.settings.unit==='lb'?'lb':'kg'}</button>`:''}<button class="btn sm" data-a="finish">${s.done?'Enregistrer':'Terminer'}</button></div><div class="lv-b">`;
+  let h=`<div class="lv-h"><button class="ibtn" data-a="liveMin" aria-label="Réduire" data-tip="Réduire : la séance continue en arrière-plan, tu la reprends depuis l’accueil">${ic('down')}</button><div class="t"><b class="ell">${esc(s.name)}</b><span class="num" id="lvT">${s.done?'Modification · '+fmtDay(s.date):s.past?fmtDayLong(s.date):fmtSec((Date.now()-s.start)/1000)}</span></div>${s.items.some(it=>(it.type||exType(it))==='charge')?`<button class="chip ${S.settings.unit==='lb'?'on':''}" data-a="lvUnit" style="height:34px;padding:0 10px">${S.settings.unit==='lb'?'lb':'kg'}</button>`:''}<button class="btn sm" data-a="finish">${s.done?'Enregistrer':'Terminer'}</button></div><div class="lv-b">`;
   if(s.items.some(it=>it.unit==='lb'&&(it.type||exType(it))==='charge'))h+=`<div class="banner" style="padding:10px 12px"><div class="grow small">Saisie en <b>livres (lb)</b>, enregistrée automatiquement en kg. Touche « lb » en haut pour revenir en kg.</div></div>`;
   if(!s.items.length)h+=`<div class="empty"><b>Séance vide</b>Ajoute des exercices pour commencer.</div>`;
   s.items.forEach((it,i)=>{
     const ty=it.type||exType(it),F=FIELDS[ty],c=chain(s.items,i),cols=`26px minmax(0,1fr) ${F.map(()=>'64px').join(' ')} 40px`;
     const doneN=it.sets.filter(x=>x.done).length;
     if(it.skipped){h+=`<div class="ex skp ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h" style="margin:0"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${ic('skip','s').replace('class="i s"','class="i" style="width:12px;height:12px;vertical-align:-1px"')} Exercice passé</div></div><button class="chip on" data-a="lvSkip" data-i="${i}">Reprendre</button></div></div>`;return}
-    h+=`<div class="ex ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${c.on?`<span class="badge" style="margin-right:6px">Superset</span>`:''}${doneN}/${it.sets.length} séries</div></div>
-    ${ty==='charge'?`<button class="ibtn" data-a="lvPlates" data-i="${i}" aria-label="Disques">${ic('disc','s')}</button>`:''}<button class="ibtn" data-a="lvHist" data-i="${i}" aria-label="Historique">${ic('hist','s')}</button><button class="ibtn" data-a="lvSkip" data-i="${i}" aria-label="Passer l’exercice">${ic('skip','s')}</button><button class="ibtn" data-a="lvRm" data-i="${i}" aria-label="Retirer">${ic('x','s')}</button></div>`;
+    h+=`<div class="ex ${c.on?'ss':''} ${c.on&&i===c.b?'last':''}" id="ex${i}"><div class="ex-h"><div class="grow"><div class="n">${esc(exName(it))}</div><div class="tiny muted">${c.on?`<span class="badge" style="margin-right:2px">Superset</span>${qm('superset')} `:''}${doneN}/${it.sets.length} séries</div></div>
+    ${ty==='charge'?`<button class="ibtn" data-a="lvPlates" data-i="${i}" aria-label="Disques" data-tip="Calculateur de disques : quels disques mettre de chaque côté de la barre">${ic('disc','s')}</button>`:''}<button class="ibtn" data-a="lvHist" data-i="${i}" aria-label="Historique" data-tip="Historique, records et courbe de cet exercice">${ic('hist','s')}</button><button class="ibtn" data-a="lvSkip" data-i="${i}" aria-label="Passer l’exercice" data-tip="Passer l’exercice aujourd’hui : il sera signalé à la prochaine séance">${ic('skip','s')}</button><button class="ibtn" data-a="lvRm" data-i="${i}" aria-label="Retirer" data-tip="Retirer l’exercice de cette séance">${ic('x','s')}</button></div>`;
     if(it.skipLast)h+=`<div style="margin:0 0 6px"><span class="badge red">${ic('skip','s').replace('class="i s"','class="i" style="width:12px;height:12px"')}Passé la dernière fois (${fmtDay(it.skipLast)})</span></div>`;
     if(it.prev)h+=`<div class="prevl">${it.skipLast?'Perfs de la séance d’avant':'Pré-rempli avec ta séance'} du ${fmtDay(it.prevDate)} : ${it.prev.map(p=>setTxtU(ty,p,it.unit)).join(', ')}${ty==='charge'?' ('+(it.unit==='lb'?'lb':'kg')+')':''}</div>`;
     else h+=`<div class="prevl">Première fois${it.tgt&&ty!=='distance'?' · objectif '+(ty==='temps'?fmtSec(it.tgt):it.tgt+' reps'):''}</div>`;
@@ -825,7 +848,7 @@ function renderLive(){
     h+=`<div class="sets"><div class="sr hd" style="grid-template-columns:${cols}"><span>#</span><span>${lbm?'= kg':'Préc.'}</span>${F.map(f=>f[0]==='w'?`<button data-a="lvItemUnit" data-i="${i}" style="text-align:center;font-size:11px;color:var(--ac);text-transform:uppercase;letter-spacing:.5px">${lbm?'lb':'kg'} ⇄</button>`:`<span style="text-align:center">${f[1]}</span>`).join('')}<span></span></div>`;
     it.sets.forEach((x,k)=>{
       const p=it.prev&&it.prev[k];
-      h+=`<div class="sr ${x.done?'done':''}" style="grid-template-columns:${cols}"><span class="k ${x.pr?'pr':''}">${x.pr?ic('trophy','s').replace('class="i s"','class="i" style="width:15px;height:15px"'):k+1}</span><span class="pv" id="kv${i}_${k}">${lbm?(x.w!=null?'= '+fmtN(Math.round(x.w*10)/10):'·'):(p?setTxt(ty,p):'·')}</span>${F.map(f=>`<input class="cell" inputmode="${f[2]}" data-i="${i}" data-k="${k}" data-f="${f[0]}" value="${x[f[0]]!=null?fmtN(f[0]==='w'?toU(x[f[0]],it.unit):x[f[0]]):''}" placeholder="${cellPh(it,k,f[0])}">`).join('')}<button class="ck" data-a="chk" data-i="${i}" data-k="${k}" aria-label="Valider la série">${ic('check')}</button></div>`;
+      h+=`<div class="sr ${x.done?'done':''}" style="grid-template-columns:${cols}"><span class="k ${x.pr?'pr':''}">${x.pr?ic('trophy','s').replace('class="i s"','class="i" style="width:15px;height:15px"'):k+1}</span><span class="pv" id="kv${i}_${k}">${lbm?(x.w!=null?'= '+fmtN(Math.round(x.w*10)/10):'·'):(p?setTxt(ty,p):'·')}</span>${F.map(f=>`<input class="cell" inputmode="${f[2]}" data-i="${i}" data-k="${k}" data-f="${f[0]}" value="${x[f[0]]!=null?fmtN(f[0]==='w'?toU(x[f[0]],it.unit):x[f[0]]):''}" placeholder="${cellPh(it,k,f[0])}">`).join('')}<button class="ck" data-a="chk" data-i="${i}" data-k="${k}" aria-label="Valider la série" data-tip="Valider la série : sans ✓, elle n’est pas enregistrée">${ic('check')}</button></div>`;
       if(x.pr)h+=`<div class="tiny" style="color:var(--gold);margin:-2px 0 2px 36px">${esc(x.pr)}</div>`;
     });
     h+=`</div><div class="ex-f"><button class="chip" data-a="lvAdd" data-i="${i}">${ic('plus','s')}Série</button>${it.sets.length>1?`<button class="chip" data-a="lvDel" data-i="${i}">${ic('minus','s')}Série</button>`:''}<span class="grow"></span>${!s.past?`<span class="tiny dim">${ic('timer','s').replace('class="i s"','class="i" style="width:14px;height:14px;vertical-align:-2px"')}</span><select data-a2="lvRest" data-i="${i}">${RESTS.map(r=>`<option value="${r}" ${r==it.rest?'selected':''}>${r?fmtSec(r):'Aucun'}</option>`).join('')}</select>`:''}</div>`;
@@ -875,10 +898,10 @@ function finishSheet(){
   const draw=()=>{
     const note=$('#fnote',body)?$('#fnote',body).value:s.note||'',dur=$('#fdur',body)?$('#fdur',body).value:elapsed;
     body.innerHTML=`<h3>${s.done?'Enregistrer les modifications':'Terminer la séance'}</h3>
-    <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries validées</div><div class="v num">${doneN}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>
+    <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries validées</div><div class="v num">${doneN}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume${qm('volume')}</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>
     ${s.items.filter(it=>it.skipped).length?`<div class="small muted" style="margin:-2px 0 8px">${s.items.filter(it=>it.skipped).length} exercice(s) passé(s), signalé(s) à la prochaine séance.</div>`:''}${s.items.some(it=>!it.skipped&&it.sets.some(x=>!x.done))?`<div class="small" style="color:var(--gold);margin:-2px 0 12px">Les séries non validées ne seront pas enregistrées.</div>`:''}
     <div class="field"><label>Durée (minutes)</label><input id="fdur" inputmode="numeric" value="${esc(dur)}"></div>
-    <div class="field"><label>Effort ressenti (RPE)${rpe?' : '+rpe+'/10':''}</label><div class="rpe">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-x="rpe" data-n="${n}" class="${rpe===n?'on':''}">${n}</button>`).join('')}</div></div>
+    <div class="field"><label>Effort ressenti (RPE)${rpe?' : '+rpe+'/10':''}${qm('rpe')}</label><div class="rpe">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button data-x="rpe" data-n="${n}" class="${rpe===n?'on':''}">${n}</button>`).join('')}</div></div>
     <div class="field"><label>Comment tu te sens ?</label><div class="mood">${MOODS.map((m,i)=>`<button data-x="mood" data-n="${i}" class="${mood===i?'on':''}"><span class="dot" style="background:${m[1]};width:12px;height:12px"></span>${m[0]}</button>`).join('')}</div></div>
     <div class="field"><label>Commentaire</label><textarea id="fnote" placeholder="Bonne énergie, épaule un peu sensible…">${esc(note)}</textarea></div>
     <div class="stick"><button class="btn sec" data-x="cancel">Retour</button><button class="btn grow" data-x="ok">${ic('check','s')}Enregistrer</button></div>`;
@@ -906,7 +929,7 @@ function summarySheet(s){
   haptic();
   const recs=s.records||[];
   const body=openSheet(`<div style="text-align:center;padding:6px 0 4px"><div style="width:64px;height:64px;border-radius:50%;background:var(--acbg);color:var(--ac);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">${ic('check').replace('class="i "','class="i" style="width:32px;height:32px;stroke-width:2.5"')}</div><h3 style="margin:0">Séance terminée</h3><div class="muted small" style="margin-top:4px">${esc(s.name)} · ${fmtDur(s.end-s.start)}</div></div>
-  <div class="tiles" style="margin-top:16px"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries</div><div class="v num">${sessSets(s)}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>
+  <div class="tiles" style="margin-top:16px"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries</div><div class="v num">${sessSets(s)}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume${qm('volume')}</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>
   ${recs.length?`<div class="h2" style="color:var(--gold)">${recs.length} record${recs.length>1?'s':''} battu${recs.length>1?'s':''}</div><div class="card list" style="background:var(--goldbg)">${recs.map(r=>`<div class="li"><span style="color:var(--gold)">${ic('trophy','s')}</span><div class="grow"><div style="font-weight:600">${esc(r.ex)}</div><div class="small muted">${esc(r.label)}</div></div><b class="num">${esc(r.txt)}</b></div>`).join('')}</div>`:''}
   <div class="stick"><button class="btn sec" data-x="close">Fermer</button><button class="btn grow" data-x="share">${ic('share','s')}Partager en image</button></div>`);
   body.addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(!x)return;if(x.dataset.x==='close')closeSheet();if(x.dataset.x==='share')shareImage(s)});
@@ -914,10 +937,10 @@ function summarySheet(s){
 function sessDetail(id){
   const s=S.sessions.find(x=>x.id===id);if(!s)return;
   let h=`<div class="row" style="gap:8px;margin-top:4px"><span class="dot" style="background:${s.color||'var(--ac)'};width:12px;height:12px"></span><h3 style="margin:0">${esc(s.name)}</h3></div><div class="small muted" style="margin:4px 0 14px;text-transform:capitalize">${fmtDayLong(s.date)} · ${fmtDur(s.end-s.start)}</div>
-  <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries</div><div class="v num">${sessSets(s)}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>`;
+  <div class="tiles"><div class="tile" style="background:var(--s2)"><div class="small muted">Séries</div><div class="v num">${sessSets(s)}</div></div><div class="tile" style="background:var(--s2)"><div class="small muted">Volume${qm('volume')}</div><div class="v num">${fmtK(sessVolume(s))}<small> kg</small></div></div></div>`;
   if(s.rpe!=null||s.mood!=null||s.note)h+=`<div class="card" style="background:var(--s2)"><div class="row" style="gap:8px;flex-wrap:wrap">${s.rpe!=null?`<span class="badge">RPE ${s.rpe}/10</span>`:''}${s.mood!=null?`<span class="badge" style="background:transparent;border:1px solid ${MOODS[s.mood][1]};color:${MOODS[s.mood][1]}">${MOODS[s.mood][0]}</span>`:''}</div>${s.note?`<div style="margin-top:8px">${esc(s.note)}</div>`:''}</div>`;
   s.items.forEach((it,i)=>{const ty=it.type||exType(it),c=chain(s.items,i);if(it.skipped){h+=`<div class="it ${c.on?'ssl':''}" style="opacity:.7"><div style="font-weight:600;text-decoration:line-through;color:var(--tx3)">${esc(exName(it))}</div><div class="small" style="color:var(--red);margin-top:2px">Passé</div></div>`;return}h+=`<div class="it ${c.on?'ssl':''}"><div style="font-weight:600">${esc(exName(it))}</div><div class="small muted" style="margin-top:4px;line-height:1.6">${it.sets.map(x=>`${x.pr?'<span style="color:var(--gold)">':''}${setTxt(ty,x)}${x.pr?' ★</span>':''}`).join('  ·  ')}</div></div>`});
-  h+=`<div class="stick"><button class="btn danger" data-x="del">${ic('trash','s')}</button><button class="btn sec" data-x="edit">${ic('edit','s')}Modifier</button><button class="btn grow" data-x="share">${ic('share','s')}Partager</button></div>`;
+  h+=`<div class="stick"><button class="btn danger" data-x="del" data-tip="Supprimer la séance">${ic('trash','s')}</button><button class="btn sec" data-x="edit">${ic('edit','s')}Modifier</button><button class="btn grow" data-x="share">${ic('share','s')}Partager</button></div>`;
   const body=openSheet(h);
   body.addEventListener('click',async e=>{const x=e.target.closest('[data-x]');if(!x)return;const a=x.dataset.x;
     if(a==='share')shareImage(s);
@@ -1059,6 +1082,15 @@ const A={
   lvPlates:el=>{const it=L.items[+el.dataset.i];const x=it.sets.find(y=>!y.done)||it.sets[0];const p=it.prev&&it.prev[0];const kg=x.w??(p&&p.w)??null;platesSheet(kg==null?null:toU(kg,it.unit),it.unit)},
   rAdj:el=>{if(!R)return;R.end+=(+el.dataset.n)*1000;R.total=Math.max(R.total,R.end-Date.now());tickRest()},
   rSkip:()=>stopRest(),
+  help:el=>helpSheet(el.dataset.k),
+  guide:()=>openGuide(),
+  gNext:()=>{gI++;drawGuide()},
+  gPrev:()=>{gI=Math.max(0,gI-1);drawGuide()},
+  gSkip:()=>closeGuide(),
+  gDone:()=>{if(guideSlides()[gI].plan){S.settings.examplePlan=false;save('settings')}closeGuide();render()},
+  gEmpty:()=>{clearExamplePlan();closeGuide();render();toast('Planning vidé')},
+  exClear:()=>{if(!confirm('Retirer les séances d’exemple (Push, Pull, Jambes) et vider leurs jours du planning ? Ton historique est conservé.'))return;clearExamplePlan();render();toast('Planning d’exemple vidé')},
+  exKeep:()=>{S.settings.examplePlan=false;save('settings');render();toast('Planning d’exemple gardé')},
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el||el.tagName==='SELECT')return;const f=A[el.dataset.a];if(f)f(el,e)});
 document.addEventListener('input',e=>{
@@ -1076,6 +1108,53 @@ document.addEventListener('focusin',e=>{if(e.target.classList&&e.target.classLis
 $('#fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(f)restore(f)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){tickRest();if(L&&!L.done&&!L.past){WL=null;wakeOn()}if(!L)render()}else if(L)saveLive(true)});
 
+/* ---------- aide : ?, appui long, guide, planning d'exemple ---------- */
+const qm=k=>`<button type="button" class="qm" data-a="help" data-k="${k}" aria-label="Explication">?</button>`;
+const HELP={
+  rpe:['RPE : effort ressenti',['Une note de 1 à 10 pour dire à quel point ta séance a été dure.','10 = impossible d’en faire plus. 8 = très dur. 6 à 7 = dur mais il en restait sous le pied. 5 et moins = facile.','En comparant d’une semaine à l’autre, tu vois si tu te fatigues trop ou si tu peux pousser plus.']],
+  '1rm':['1RM estimé',['La charge maximale que tu pourrais soulever une seule fois, estimée à partir de tes séries, sans avoir à la tester.','Calcul : charge × (1 + répétitions ÷ 30). Exemple : 60 kg × 10 répétitions ≈ 80 kg.','Pratique pour comparer des séries faites avec des répétitions différentes.']],
+  volume:['Volume',['La quantité totale de travail : charge × répétitions, additionnée sur toutes les séries validées.','Exemple : 3 séries de 10 répétitions à 50 kg = 1 500 kg.','Si ton volume monte au fil des semaines, tu progresses.']],
+  superset:['Superset',['Deux exercices (ou plus) enchaînés sans repos entre eux.','Le minuteur de repos se lance seulement après le dernier exercice du groupe.','Pour en créer un : dans une séance type, touche « Lier au suivant ».']],
+  streak:['Série en cours',['Le nombre de semaines d’affilée où tu as fait toutes les séances prévues dans ton planning.','Si rien n’est prévu, une séance dans la semaine suffit.']],
+};
+function helpSheet(k){const h=HELP[k];if(!h)return;const body=openSheet(`<h3>${h[0]}</h3>${h[1].map(p=>`<p class="muted" style="line-height:1.55;margin:0 0 12px">${p}</p>`).join('')}<div class="stick"><button class="btn grow" data-x="ok">Compris</button></div>`);body.addEventListener('click',e=>{if(e.target.closest('[data-x="ok"]'))closeSheet()})}
+
+const EX_IDS=['t1','t2','t3'];
+function examplePlanOn(){return S.settings.examplePlan!==false&&S.templates.some(t=>EX_IDS.includes(t.id))}
+function clearExamplePlan(){S.templates=S.templates.filter(t=>!EX_IDS.includes(t.id));WEEK.forEach(d=>{if(EX_IDS.includes(S.plan[d]))S.plan[d]=null});S.settings.examplePlan=false;save('templates');save('plan');save('settings')}
+
+/* appui long sur une icône : petite explication */
+let tipT=null,tipXY=null,tipShown=false,tipH=null;
+function showTip(el){const t=$('#tip');t.style.maxWidth=Math.min(270,innerWidth-24)+'px';t.textContent=el.dataset.tip;t.classList.add('on');
+  const r=el.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight;let x=r.left+r.width/2-tw/2;x=Math.max(12,Math.min(innerWidth-tw-12,x));let y=r.top-th-10;if(y<12)y=r.bottom+10;
+  t.style.left=x+'px';t.style.top=y+'px';haptic();clearTimeout(tipH);tipH=setTimeout(()=>t.classList.remove('on'),2800)}
+document.addEventListener('touchstart',e=>{clearTimeout(tipT);tipShown=false;const el=e.target.closest&&e.target.closest('[data-tip]');if(!el){$('#tip').classList.remove('on');return}
+  tipXY=[e.touches[0].clientX,e.touches[0].clientY];tipT=setTimeout(()=>{tipShown=true;showTip(el)},450)},{passive:true,capture:true});
+document.addEventListener('touchmove',e=>{if(!tipXY)return;const p=e.touches[0];if(Math.hypot(p.clientX-tipXY[0],p.clientY-tipXY[1])>10)clearTimeout(tipT)},{passive:true,capture:true});
+document.addEventListener('touchend',e=>{clearTimeout(tipT);tipXY=null;if(tipShown&&e.cancelable)e.preventDefault()},{passive:false,capture:true});
+document.addEventListener('click',e=>{if(tipShown){tipShown=false;e.stopPropagation();e.preventDefault()}},true);
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-tip]'))e.preventDefault()});
+
+/* guide de démarrage */
+let gI=0;
+function guideSlides(){
+  const s=[
+    {ic:'home',t:'Bienvenue dans Carnet Muscu',p:['Ton carnet d’entraînement, rien que pour toi. Tout reste sur ton téléphone, sans compte.','Sur l’<b>Accueil</b>, la séance du jour t’attend avec un bouton <b>Commencer</b>.','Pour choisir quelle séance faire chaque jour, touche un jour dans <b>Ma semaine</b>. Tes séances se créent dans l’onglet <b>Séances</b>.']},
+    {ic:'dumb',t:'Pendant la séance',p:['Tes poids et répétitions de la dernière fois sont <b>déjà remplis</b>. Ajuste si besoin.','Touche <b>✓</b> pour valider chaque série. Une série non validée n’est pas enregistrée.','Le <b>repos</b> se lance tout seul après chaque série. Un doute sur une icône ? <b>Garde le doigt appuyé dessus</b>.']},
+    {ic:'chart',t:'Suis tes progrès',p:['Le <b>Calendrier</b> garde tout ton historique. L’onglet <b>Progrès</b> montre tes records et tes courbes.','Un terme pas clair, comme RPE ou volume ? Touche le petit <b>?</b> à côté.','Pense à faire une <b>sauvegarde</b> de temps en temps dans Réglages.']},
+  ];
+  if(examplePlanOn())s.push({ic:'cal',plan:true,t:'Ton planning',p:['Pour t’aider à démarrer, 3 séances d’exemple sont prévues : <b>Push</b> le lundi, <b>Pull</b> le mercredi et <b>Jambes</b> le vendredi.','Tu peux les garder et les modifier, ou partir d’un planning vide et créer tes propres séances.']});
+  return s;
+}
+function drawGuide(){
+  const L=guideSlides();gI=Math.min(gI,L.length-1);const g=L[gI],last=gI===L.length-1;
+  $('#guide').innerHTML=`<button class="g-skip" data-a="gSkip" style="${last?'visibility:hidden':''}">Passer</button><div class="g-body"><div class="g-ic">${ic(g.ic)}</div><h2>${g.t}</h2>${g.p.map(x=>`<p>${x}</p>`).join('')}</div>
+  <div class="g-dots">${L.map((_,i)=>`<i class="${i===gI?'on':''}"></i>`).join('')}</div>
+  <div class="g-act">${g.plan?`<button class="btn full" data-a="gDone">Garder l’exemple</button><button class="btn full sec" data-a="gEmpty">Partir d’un planning vide</button>`:`<button class="btn full" data-a="${last?'gDone':'gNext'}">${last?'C’est parti':'Suivant'}</button>`}${gI>0?`<button class="btn full ghost" data-a="gPrev">Retour</button>`:''}</div>`;
+}
+function openGuide(){closeAllSheets();gI=0;drawGuide();$('#guide').classList.add('on')}
+function closeGuide(){$('#guide').classList.remove('on');if(!S.settings.seenGuide){S.settings.seenGuide=true;save('settings')}}
+
 /* ---------- démarrage ---------- */
 (async function boot(){
   try{
@@ -1087,6 +1166,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
   }catch(e){seed();toast('Stockage indisponible : les données ne seront pas conservées')}
   if(!S.settings.since){S.settings.since=dk(new Date());save('settings')}
   render();
+  if(!S.settings.seenGuide)openGuide();
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
   if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
