@@ -116,11 +116,16 @@ svg.i.s{width:18px;height:18px}
 /* sheets */
 .sheet-wrap{position:fixed;inset:0;z-index:100}
 .sheet-bg{position:absolute;inset:0;background:rgba(5,3,12,.6);opacity:0;transition:opacity .22s}
-.sheet{position:absolute;left:0;right:0;bottom:0;max-height:92vh;background:var(--s1);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding-bottom:var(--sab)}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:calc(100% - var(--sat) - 56px);background:var(--s1);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding-bottom:var(--sab)}
 .sheet-wrap.in .sheet-bg{opacity:1}
 .sheet-wrap.in .sheet{transform:none}
 .grab{width:40px;height:5px;border-radius:3px;background:var(--s3);margin:8px auto 2px;flex:none}
-.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 20px}
+.sheet.drag{transition:none}
+.sheet-top{flex:none;padding:4px 0 8px;touch-action:none;cursor:grab}
+.sheet-x{position:absolute;top:10px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;background:var(--s2);color:var(--tx2);display:flex;align-items:center;justify-content:center;border:0;padding:0}
+.sheet-x svg{width:16px;height:16px}
+.sheet-body>:first-child{padding-right:40px}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:8px 16px 20px}
 .sheet h3{margin:6px 0 12px;font-size:22px;letter-spacing:-.3px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:13px;color:var(--tx2);margin:0 0 6px 2px}
@@ -412,14 +417,29 @@ function wakeOff(){try{WL&&WL.release()}catch(e){}WL=null}
 const sheets=[];
 function openSheet(html='',onClose){
   const w=document.createElement('div');w.className='sheet-wrap';
-  w.innerHTML='<div class="sheet-bg"></div><div class="sheet"><div class="grab"></div><div class="sheet-body"></div></div>';
+  w.innerHTML='<div class="sheet-bg"></div><div class="sheet"><div class="sheet-top"><div class="grab"></div></div><button class="sheet-x" type="button" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="sheet-body"></div></div>';
   document.body.appendChild(w);const body=w.querySelector('.sheet-body');body.innerHTML=html;
   requestAnimationFrame(()=>requestAnimationFrame(()=>w.classList.add('in')));
-  w.querySelector('.sheet-bg').addEventListener('click',()=>closeSheet());
-  sheets.push({w,onClose});return body;
+  const sh=w.querySelector('.sheet'),me={w,onClose};
+  const closeMe=()=>{if(sheets[sheets.length-1]===me)closeSheet()};
+  w.querySelector('.sheet-bg').addEventListener('click',closeMe);
+  w.querySelector('.sheet-x').addEventListener('click',closeMe);
+  /* glisser vers le bas pour fermer */
+  let y0=null,x0=0,dy=0,t0=0,drag=false,fromTop=false;
+  sh.addEventListener('touchstart',e=>{const t=e.target;if(e.touches.length>1||t.closest('input,textarea,select,.sheet-x')){y0=null;return}
+    fromTop=!!t.closest('.sheet-top');if(!fromTop&&body.scrollTop>0){y0=null;return}
+    y0=e.touches[0].clientY;x0=e.touches[0].clientX;dy=0;t0=Date.now();drag=false},{passive:true});
+  sh.addEventListener('touchmove',e=>{if(y0==null)return;const d=e.touches[0].clientY-y0,dx=e.touches[0].clientX-x0;
+    if(!drag){if(Math.abs(dx)>Math.abs(d)+4||d<-4){y0=null;return}if(d<8)return;if(!fromTop&&body.scrollTop>0){y0=null;return}drag=true;sh.classList.add('drag')}
+    dy=Math.max(0,d);sh.style.transform='translateY('+dy+'px)';if(e.cancelable)e.preventDefault()},{passive:false});
+  const end=()=>{if(y0==null&&!drag)return;y0=null;if(!drag)return;drag=false;sh.classList.remove('drag');
+    const v=dy/Math.max(1,Date.now()-t0);sh.style.transform='';if(dy>110||(dy>40&&v>.5))closeMe()};
+  sh.addEventListener('touchend',end);sh.addEventListener('touchcancel',end);
+  sheets.push(me);return body;
 }
 function closeSheet(){const s=sheets.pop();if(!s)return;s.w.classList.remove('in');setTimeout(()=>s.w.remove(),260);s.onClose&&s.onClose()}
 function closeAllSheets(){while(sheets.length)closeSheet()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheets.length)closeSheet()});
 
 /* ---------- navigation ---------- */
 let tab='home',seanceSeg='tpl',progSeg='week',weekOff=0,progEx=null,progM=null,exFilter='Tous',exSearch='';
