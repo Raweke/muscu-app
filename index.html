@@ -190,9 +190,9 @@ body.lv #restbar{bottom:calc(12px + var(--sab))}
 #restbar.on{display:flex}
 #restbar .pg{position:absolute;left:0;bottom:0;height:3px;background:var(--ac)}
 #restbar .tm{font-size:26px;font-weight:700;min-width:74px}
-#toast{position:fixed;left:50%;top:calc(var(--sat) + 12px);transform:translate(-50%,-150%);z-index:200;background:var(--s3);color:var(--tx);padding:12px 18px;border-radius:16px;font-size:15px;font-weight:500;transition:transform .3s;max-width:90vw;text-align:center;border:1px solid var(--line)}
-#toast.on{transform:translate(-50%,0)}
-#toast.gold{background:#3a2f12;border-color:var(--gold);color:var(--gold)}
+#toast{position:fixed;left:50%;top:calc(var(--sat) + 12px);transform:translate(-50%,-24px);opacity:0;visibility:hidden;pointer-events:none;z-index:200;background:var(--s3);color:var(--tx);padding:12px 18px;border-radius:16px;font-size:15px;font-weight:500;transition:transform .25s,opacity .25s,visibility 0s .25s;max-width:90vw;text-align:center;border:1px solid var(--line)}
+#toast.on{transform:translate(-50%,0);opacity:1;visibility:visible;pointer-events:auto;transition:transform .25s,opacity .2s}
+#toast.gold{background:var(--s3);border-color:var(--gold);color:var(--gold)}
 #hapt{position:fixed;left:-50px;top:0;width:1px;height:1px;opacity:0;overflow:hidden}
 .plates{display:flex;align-items:center;justify-content:center;gap:3px;height:130px;margin:14px 0}
 .plates .bar{width:40px;height:12px;background:#8d87a8;border-radius:3px}
@@ -428,7 +428,10 @@ function bestOf(exId){
 
 /* ---------- toast, son, vibration, écran ---------- */
 let toastT;
-function toast(m,k=''){const t=$('#toast');t.textContent=m;t.className='on '+k;clearTimeout(toastT);toastT=setTimeout(()=>t.className=k,2600)}
+function toast(m,k=''){const t=$('#toast');t.textContent=m;t.className='on '+k;clearTimeout(toastT);toastT=setTimeout(hideToast,Math.min(4500,2200+m.length*25))}
+function hideToast(){clearTimeout(toastT);$('#toast').classList.remove('on')}
+$('#toast').addEventListener('click',hideToast);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')hideToast()});
 let AC=null;
 function audioOn(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}}
 function beep(){
@@ -793,7 +796,7 @@ function vSet(){
   h+=`<div class="h2">Calculateur de disques</div><div class="card"><div class="field"><label>Barre par défaut</label><div class="chips">${[20,15,10,7,0].map(b=>`<button class="chip ${st.bar==b?'on':''}" data-a="bar" data-b="${b}">${b?b+' kg':'Sans barre'}</button>`).join('')}</div></div><div class="field"><label>Disques disponibles (par paire)</label><div class="chips" style="flex-wrap:wrap">${[25,20,15,10,5,2.5,2,1.25,1,0.5].map(p=>`<button class="chip ${st.plates.includes(p)?'on':''}" data-a="plate" data-p="${p}">${fmtN(p)}</button>`).join('')}</div></div><button class="btn full sec" data-a="plates">${ic('disc','s')}Ouvrir le calculateur</button></div>`;
   h+=`<div class="h2">Aide</div><div class="card"><button class="btn full sec" data-a="guide">Revoir le guide de démarrage</button>${examplePlanOn()?`<button class="btn full sec" style="margin-top:10px" data-a="exClear">Vider le planning d’exemple</button>`:''}<div class="tiny dim" style="margin-top:10px">Astuce : garde le doigt appuyé sur une icône pour savoir à quoi elle sert, et touche un « ? » pour comprendre un terme.</div></div>`;
   h+=`<div class="h2">Données</div><div class="card"><div class="small muted" style="margin-bottom:12px">${nS} séance${nS>1?'s':''} · ${S.templates.length} séances types · ${S.exercises.filter(e=>e.custom).length} exercices perso.<br>Tout est stocké uniquement sur cet iPhone, dans l’app de l’écran d’accueil. Aucun compte, rien n’est envoyé.</div><button class="btn full danger" data-a="wipe">Tout effacer</button></div>`;
-  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.4</div>`;
+  h+=`<div class="tiny dim" style="text-align:center;margin:18px 0 6px">Carnet Muscu · version 1.5</div>`;
   return {sub:'Préférences',title:'Réglages',html:h};
 }
 function platesSheet(target,unit){
@@ -1016,13 +1019,13 @@ async function shareImage(s){
   let y=570;const recs=new Set((s.records||[]).map(r=>r.ex));
   const done=s.items.filter(it=>it.sets.length),items=done.slice(0,9);
   items.forEach(it=>{const ty=it.type||exType(it);let best=it.sets[0];it.sets.forEach(x=>{if(ty==='charge'?e1rm(x.w,x.r)>e1rm(best.w,best.r):(x[keyField(ty)]||0)>(best[keyField(ty)]||0))best=x});
-    const nm=exName(it);g.fillStyle=recs.has(nm)?'#ffcf5c':T.tx;g.font=`600 38px ${F}`;let n=nm;while(g.measureText(n).width>600&&n.length>4)n=n.slice(0,-2);if(n!==nm)n+='…';g.fillText(n,80,y);
+    const nm=exName(it);g.fillStyle=recs.has(nm)?T.gold:T.tx;g.font=`600 38px ${F}`;let n=nm;while(g.measureText(n).width>600&&n.length>4)n=n.slice(0,-2);if(n!==nm)n+='…';g.fillText(n,80,y);
     g.fillStyle=T.tx3;g.font=`400 28px ${F}`;g.fillText(it.sets.length+' séries',80,y+40);
-    g.fillStyle=recs.has(nm)?'#ffcf5c':T.ac;g.font=`700 40px ${F}`;g.textAlign='right';g.fillText((recs.has(nm)?'★ ':'')+setTxt(ty,best),W-80,y+8);g.textAlign='left';
+    g.fillStyle=recs.has(nm)?T.gold:T.ac;g.font=`700 40px ${F}`;g.textAlign='right';g.fillText((recs.has(nm)?'★ ':'')+setTxt(ty,best),W-80,y+8);g.textAlign='left';
     g.strokeStyle=T.line;g.lineWidth=2;g.beginPath();g.moveTo(80,y+66);g.lineTo(W-80,y+66);g.stroke();y+=100});
   if(done.length>9){g.fillStyle=T.tx2;g.font=`400 30px ${F}`;g.fillText('+ '+(done.length-9)+' autres exercices',80,y+10)}
   const foot=[];if((s.records||[]).length)foot.push(s.records.length+' record'+(s.records.length>1?'s':''));if(s.rpe)foot.push('RPE '+s.rpe+'/10');if(s.mood!=null)foot.push(MOODS[s.mood][0]);
-  if(foot.length){g.fillStyle='#ffcf5c';g.font=`600 32px ${F}`;g.fillText(foot.join('  ·  '),80,H-80)}
+  if(foot.length){g.fillStyle=T.gold;g.font=`600 32px ${F}`;g.fillText(foot.join('  ·  '),80,H-80)}
   const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`seance-${s.date}.png`;
   const file=new File([blob],name,{type:'image/png'});
   try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}catch(e){if(e.name==='AbortError')return}
@@ -1148,7 +1151,7 @@ let homeWeekOff=0;
 function planFor(k){const o=S.planDates[k];if(o!==undefined)return o==='rest'?null:(tplById(o)||null);return tplById(S.plan[fromDk(k).getDay()])||null}
 
 /* ---------- thèmes de couleur ---------- */
-const mkT=(name,bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,rgb,acrgb)=>({name,v:{bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,acbg:`rgba(${acrgb},.15)`,acline:`rgba(${acrgb},.45)`,bgt:`rgba(${rgb},.94)`,bgs:`rgba(${rgb},.55)`}});
+const mkT=(name,bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,rgb,acrgb,gold='#ffcf5c',goldrgb='255,207,92')=>({name,v:{bg,s1,s2,s3,line,tx,tx2,tx3,ac,ac2,ink,gold,goldbg:`rgba(${goldrgb},.14)`,acbg:`rgba(${acrgb},.15)`,acline:`rgba(${acrgb},.45)`,bgt:`rgba(${rgb},.94)`,bgs:`rgba(${rgb},.55)`}});
 const THEMES={
   violet:mkT('Violet','#120f1f','#1a1630','#221c3d','#2c2550','#2f2852','#ece8ff','#a49cc8','#726a99','#b56bff','#a796ff','#140d24','18,15,31','181,107,255'),
   ocean:mkT('Océan','#0b1420','#111d2c','#172638','#1f3146','#22354c','#e6f0ff','#9cb0c9','#677b95','#4fa8ff','#82c4ff','#03111f','11,20,32','79,168,255'),
@@ -1156,10 +1159,12 @@ const THEMES={
   braise:mkT('Braise','#16100c','#201712','#2a1f18','#36291f','#3a2c22','#fbeee4','#c4a996','#8f7564','#ff8a3d','#ffad75','#1f0d02','22,16,12','255,138,61'),
   rose:mkT('Rose','#170e16','#22141f','#2d1a29','#392235','#3c2538','#fde8f6','#c69fbb','#8f6a86','#ff5fb4','#ff90cb','#22031a','23,14,22','255,95,180'),
   graphite:mkT('Graphite','#0a0a0b','#141416','#1c1c1f','#27272b','#2b2b30','#f2f2f3','#a7a7ad','#707076','#f2f2f3','#cfcfd4','#0a0a0b','10,10,11','242,242,243'),
+  fp1:mkT('Fitness Park','#0a0a0a','#151515','#1e1e1e','#2a2a2a','#2e2e2e','#f6f5ef','#b3b0a2','#7a776c','#ffe100','#fff06a','#121000','10,10,10','255,225,0','#ff9a2e','255,154,46'),
+  fp2:mkT('Fitness Park 2','#16150f','#1f1e17','#29271e','#343227','#38362b','#fbf7e6','#c4bea1','#8c866d','#f5c400','#ffd84d','#1a1400','22,21,15','245,196,0','#ff8a3d','255,138,61'),
 };
 function applyTheme(k){const t=(THEMES[k]||THEMES.violet).v,r=document.documentElement.style;Object.entries(t).forEach(([n,v])=>r.setProperty('--'+n,v));
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t.bg);try{localStorage.setItem('cm-theme',THEMES[k]?k:'violet')}catch(e){}}
-function themeVars(){const cs=getComputedStyle(document.documentElement),o={};['bg','s1','s2','s3','line','tx','tx2','tx3','ac','ac2','acbg'].forEach(n=>o[n]=cs.getPropertyValue('--'+n).trim());return o}
+function themeVars(){const cs=getComputedStyle(document.documentElement),o={};['bg','s1','s2','s3','line','tx','tx2','tx3','ac','ac2','acbg','gold'].forEach(n=>o[n]=cs.getPropertyValue('--'+n).trim());return o}
 try{const k=localStorage.getItem('cm-theme');if(k&&k!=='violet')applyTheme(k)}catch(e){}
 
 /* ---------- aide : ?, appui long, guide, planning d'exemple ---------- */
